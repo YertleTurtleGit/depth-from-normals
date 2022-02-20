@@ -1,0 +1,57 @@
+name: Jupyter to Python
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - "**.md"
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.8.10
+      uses: actions/setup-python@v2
+      with:
+        python-version: "3.8.10"
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install jupyter
+        pip install nbconvert
+        
+        
+    - name: Run Jupyter Notebook
+      run: |
+       if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+       jupyter nbconvert --to notebook --inplace --execute *.ipynb
+       
+    - name: Commit Jupyter Notebooks
+      run: |
+       git config --local user.email "action@github.com"
+       git config --local user.name "GitHub Action"
+       git add -A
+       git diff --quiet && git diff --staged --quiet || git commit -m "update jupyter notbook results" -a
+        
+        
+    - name: Convert Jupyter to Python
+      run: |
+       rm -rf python
+       mkdir python
+       for file in *.ipynb; do jupyter nbconvert --to script --output ./python/${file//.ipynb/} $file --TemplateExporter.exclude_output_prompt=True --TemplateExporter.exclude_input_prompt=True; done
+    - name: Commit python files
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add -A
+        git diff --quiet && git diff --staged --quiet || git commit -m "update python files" -a
+        
+    - name: Push changes
+      uses: ad-m/github-push-action@v0.6.0
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: main  
