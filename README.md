@@ -1,1 +1,1 @@
-# photometric-stereo-mappings
+# Photometric Stereo Mappings (WIP)
