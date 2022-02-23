@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Depth Mapping
+# # Height Mapping
 # 
 
 # ## Imports
@@ -38,7 +38,7 @@ PATH_PREFIX: str = (
 )
 
 NORMAL_MAP_PATH: str = PATH_PREFIX + NORMAL_MAP_FILE_NAME
-MASK_PATH: str = PATH_PREFIX + OPACITY_MAP_FILE_NAME
+OPACITY_PATH: str = PATH_PREFIX + OPACITY_MAP_FILE_NAME
 OUTPUT_PATH = None if IS_NOTEBOOK else PATH_PREFIX + HEIGHT_MAP_FILE_NAME
 
 MAX_THREAD_COUNT: int = max(int(cpu_count() or 1), 1)
@@ -147,6 +147,22 @@ def _get_atlas_countries(
     return image_parts, image_parts_rectangles
 
 
+if IS_NOTEBOOK:
+    atlas = _read_image(OPACITY_PATH, color=False)
+    albedo = _read_image(NORMAL_MAP_PATH)
+
+    _, rectangles = _get_atlas_countries(atlas, albedo)
+    for rectangle in rectangles:
+        albedo = cv.rectangle(
+            albedo,
+            (rectangle[1], rectangle[0]),
+            (rectangle[1] + rectangle[3], rectangle[0] + rectangle[2]),
+            (0, 1, 0),
+            round(min(atlas.shape[0], atlas.shape[1]) * 0.0025),
+        )
+    plt.imshow(albedo)
+
+
 def _integrate(
     normal_map: np.ndarray,
     normal_is_open_gl: bool,
@@ -248,7 +264,7 @@ def _integrate(
 
 def height_map(
     normal_map_path: str,
-    mask_path: str,
+    OPACITY_PATH: str,
     output_path: str = None,
     normal_is_open_gl: bool = True,
     normal_is_pseudo_compressed: bool = False,
@@ -256,7 +272,7 @@ def height_map(
     max_thread_count: int = max(int(cpu_count() or 1), 1),
 ):
     normal_map = _read_image(normal_map_path)
-    mask = _read_image(mask_path, color=False)
+    mask = _read_image(OPACITY_PATH, color=False)
     mask[mask < 0.5] = 0
     mask[mask >= 0.5] = 1
 
@@ -306,7 +322,7 @@ def height_map(
 if __name__ == "__main__":
     height_map(
         NORMAL_MAP_PATH,
-        MASK_PATH,
+        OPACITY_PATH,
         OUTPUT_PATH,
         NORMAL_IS_OPEN_GL,
         NORMAL_IS_PSEUDO_COMPRESSED,
