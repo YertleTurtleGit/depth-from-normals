@@ -43,12 +43,25 @@ jobs:
        rm -rf python
        mkdir python
        for file in *.ipynb; do jupyter nbconvert --to script --output ./python/${file//.ipynb/} $file --TemplateExporter.exclude_output_prompt=True --TemplateExporter.exclude_input_prompt=True; done
+       
     - name: Commit python files
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add -A
         git diff --quiet && git diff --staged --quiet || git commit -m "update python files" -a
+        
+    - name: Generate map image files
+      run: |
+       cd python
+       for file in *.py; do python $file; done
+       
+    - name: Commit map image files
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add -A
+        git diff --quiet && git diff --staged --quiet || git commit -m "update map image files" -a
         
     - name: Push changes
       uses: ad-m/github-push-action@v0.6.0
