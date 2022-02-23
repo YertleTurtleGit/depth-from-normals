@@ -39,11 +39,7 @@ PATH_PREFIX: str = (
 
 NORMAL_MAP_PATH: str = PATH_PREFIX + NORMAL_MAP_FILE_NAME
 MASK_PATH: str = PATH_PREFIX + OPACITY_MAP_FILE_NAME
-OUTPUT_PATH = (
-    None
-    if IS_NOTEBOOK
-    else PATH_PREFIX + "./../test_dataset/output/" + HEIGHT_MAP_FILE_NAME
-)
+OUTPUT_PATH = None if IS_NOTEBOOK else PATH_PREFIX + HEIGHT_MAP_FILE_NAME
 
 MAX_THREAD_COUNT: int = max(int(cpu_count() or 1), 1)
 
