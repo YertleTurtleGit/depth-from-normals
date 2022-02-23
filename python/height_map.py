@@ -22,7 +22,14 @@ from logging import warning
 # ## Declarations
 # 
 
-IS_NOTEBOOK: bool = False
+NORMAL_IS_OPEN_GL: bool = True  # @param {type: "boolean"}
+NORMAL_IS_PSEUDO_COMPRESSED: bool = False  # @param {type: "boolean"}
+TARGET_ITERATION_COUNT: int = 250  # @param {type: "slider", min: 1, max: 500}
+
+IS_NOTEBOOK: bool = False  # @param {type: "boolean"}
+NORMAL_MAP_FILE_NAME: str = "normal.png"  # @param {type: "string"}
+OPACITY_MAP_FILE_NAME: str = "opacity.png"  # @param {type: "string"}
+HEIGHT_MAP_FILE_NAME: str = "height.png"  # @param {type: "string"}
 
 PATH_PREFIX: str = (
     "https://raw.githubusercontent.com/YertleTurtleGit/photometric-stereo-mappings/main/test_dataset/output/"
@@ -30,11 +37,32 @@ PATH_PREFIX: str = (
     else "./../test_dataset/output/"
 )
 
-NORMAL_MAP_PATH: str = PATH_PREFIX + "normal.png"
-MASK_PATH: str = PATH_PREFIX + "opacity.png"
+NORMAL_MAP_PATH: str = PATH_PREFIX + NORMAL_MAP_FILE_NAME
+MASK_PATH: str = PATH_PREFIX + OPACITY_MAP_FILE_NAME
 OUTPUT_PATH = (
-    None if IS_NOTEBOOK else PATH_PREFIX + "./../test_dataset/output/height.png"
+    None
+    if IS_NOTEBOOK
+    else PATH_PREFIX + "./../test_dataset/output/" + HEIGHT_MAP_FILE_NAME
 )
+
+MAX_THREAD_COUNT: int = max(int(cpu_count() or 1), 1)
+
+
+if IS_NOTEBOOK:
+    from IPython.display import HTML, display
+
+    def progress(value: float, max: float = 100) -> HTML:
+        return HTML(
+            """
+            <progress
+                value='{value}'
+                max='{max}',
+                style='width: 100%'
+            >{value}</progress>
+            """.format(
+                value=value, max=max
+            )
+        )
 
 
 def _read_image(
@@ -95,7 +123,7 @@ def _read_image(
     return image
 
 
-# # Logic
+# ## Logic
 # 
 
 def _get_atlas_countries(
@@ -228,7 +256,7 @@ def height_map(
     output_path: str = None,
     normal_is_open_gl: bool = True,
     normal_is_pseudo_compressed: bool = False,
-    target_iteration_count: int = 100,
+    target_iteration_count: int = 250,
     max_thread_count: int = max(int(cpu_count() or 1), 1),
 ):
     normal_map = _read_image(normal_map_path)
@@ -239,6 +267,9 @@ def height_map(
     countries, country_bounding_boxes = _get_atlas_countries(mask, normal_map)
 
     height_map = np.zeros((normal_map.shape[0], normal_map.shape[1]))
+
+    if IS_NOTEBOOK:
+        progress_bar: DisplayHandle = display(progress(0), display_id=True)
 
     for i in range(0, len(countries)):
         p_x, p_y, p_w, p_h = country_bounding_boxes[i]
@@ -253,6 +284,14 @@ def height_map(
             ~np.isnan(part_height_map)
         ] = part_height_map[~np.isnan(part_height_map)]
 
+        percent: float = (i / len(countries)) * 100
+
+        if IS_NOTEBOOK:
+            # TODO Progress for non-atlas images.
+            progress_bar.update(progress(percent))
+        else:
+            print(str(percent) + "%")
+
     height_map -= np.min(height_map)
     height_map /= np.max(height_map)
     height_map *= pow(2, 8) - 1
@@ -262,6 +301,20 @@ def height_map(
     else:
         plt.imshow(height_map)
 
+    if IS_NOTEBOOK:
+        progress_bar.update("")
 
-height_map(NORMAL_MAP_PATH, MASK_PATH, OUTPUT_PATH)
+
+# ## Run
+
+if __name__ == "__main__":
+    height_map(
+        NORMAL_MAP_PATH,
+        MASK_PATH,
+        OUTPUT_PATH,
+        NORMAL_IS_OPEN_GL,
+        NORMAL_IS_PSEUDO_COMPRESSED,
+        TARGET_ITERATION_COUNT,
+        MAX_THREAD_COUNT,
+    )
 
