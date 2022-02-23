@@ -22,29 +22,19 @@ from logging import warning
 # ## Declarations
 # 
 
-def is_notebook() -> bool:
-    """Checks whether the script is started from inside a jupyter notebook.
-    From https://stackoverflow.com/questions/15411967/how-can-i-check-if-code-is-executed-in-the-ipython-notebook
+IS_NOTEBOOK: bool = False
 
-    Returns:
-        bool: True if the script is started from inside a jupyter notebook.
-    """
-    try:
-        shell = get_ipython().__class__.__name__
-        return True if shell == "ZMQInteractiveShell" else False
-    except NameError:
-        return False
-
-
-IS_NOTEBOOK: bool = is_notebook()
 PATH_PREFIX: str = (
     "https://raw.githubusercontent.com/YertleTurtleGit/photometric-stereo-mappings/main/test_dataset/output/"
     if IS_NOTEBOOK
     else "./../test_dataset/output/"
 )
+
 NORMAL_MAP_PATH: str = PATH_PREFIX + "normal.png"
 MASK_PATH: str = PATH_PREFIX + "opacity.png"
-OUTPUT_PATH = None if IS_NOTEBOOK else PATH_PREFIX + "./../test_dataset/output/height.png"
+OUTPUT_PATH = (
+    None if IS_NOTEBOOK else PATH_PREFIX + "./../test_dataset/output/height.png"
+)
 
 
 def _read_image(
