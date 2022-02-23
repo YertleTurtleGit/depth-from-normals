@@ -24,7 +24,7 @@ from logging import warning
 
 NORMAL_IS_OPEN_GL: bool = True  # @param {type: "boolean"}
 NORMAL_IS_PSEUDO_COMPRESSED: bool = False  # @param {type: "boolean"}
-TARGET_ITERATION_COUNT: int = 250  # @param {type: "slider", min: 1, max: 500}
+TARGET_ITERATION_COUNT: int = 100  # @param {type: "slider", min: 1, max: 500}
 
 IS_NOTEBOOK: bool = False  # @param {type: "boolean"}
 NORMAL_MAP_FILE_NAME: str = "normal.png"  # @param {type: "string"}
