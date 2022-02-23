@@ -40,11 +40,11 @@ IS_NOTEBOOK: bool = is_notebook()
 PATH_PREFIX: str = (
     "https://raw.githubusercontent.com/YertleTurtleGit/photometric-stereo-mappings/main/test_dataset/output/"
     if IS_NOTEBOOK
-    else "./../test-dataset/output/"
+    else "./../test_dataset/output/"
 )
 NORMAL_MAP_PATH: str = PATH_PREFIX + "normal.png"
 MASK_PATH: str = PATH_PREFIX + "opacity.png"
-OUTPUT_PATH = None if IS_NOTEBOOK else PATH_PREFIX + "./test_dataset/height_map.png"
+OUTPUT_PATH = None if IS_NOTEBOOK else PATH_PREFIX + "./../test_dataset/output/height.png"
 
 
 def _read_image(
@@ -140,7 +140,6 @@ def _integrate(
     target_iteration_count: int,
     max_thread_count: int,
 ) -> np.ndarray:
-    normal_map = normal_map.astype("float64")
 
     if normal_is_pseudo_compressed:
         # TODO Fix line.
