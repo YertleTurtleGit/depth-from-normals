@@ -123,7 +123,7 @@ def opacity_map(
     opacity_map = 255 - opacity_map
 
     opacity_map = cv.erode(
-        opacity_map, cv.getStructuringElement(cv.MORPH_ELLIPSE, (6, 6))
+        opacity_map, cv.getStructuringElement(cv.MORPH_ELLIPSE, (4, 4))
     )
 
     if output_path:
