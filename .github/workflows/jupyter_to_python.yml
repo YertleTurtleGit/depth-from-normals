@@ -23,6 +23,16 @@ jobs:
               pip install jupyter
               pip install nbconvert
               if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+              
+         - name: Black Check for Jupyter notebooks
+           uses: marius-mather/black-check@jupyter
+           
+         - name: Commit formatted jupyter notebook files
+           run: |
+              git config --local user.email "action@github.com"
+              git config --local user.name "GitHub Action"
+              git add -A
+              git diff --quiet && git diff --staged --quiet || git commit -m "format jupyter notebooks" -a
 
          - name: Convert Jupyter to Python
            run: |
