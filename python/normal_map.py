@@ -213,7 +213,7 @@ def normal_map(
 
     if OUTPUT_PATH:
         normal_map = np.clip(normal_map * 255, 0, 255).astype("uint8")
-        normal_map = cv.cvtColor(normal_map, cv.COLOR_RGB2BGR)
+        normal_map = cv.cvtColor(normal_map, cv.COLOR_BGR2RGB)
         cv.imwrite(output_path, normal_map)
     else:
         plt.imshow(normal_map)
