@@ -10,7 +10,10 @@
     <img title="Roughness Mapping" src="./test_dataset/output/roughness.png" width="200">
 </div>
 
-## Height mapping
-<a href="https://colab.research.google.com/github/YertleTurtleGit/photometric-stereo-mappings/blob/main/height_map.ipynb">
+|Name|Example|Live Edit|
+|---|---|---|
+|Opacity Map|<img title="Opacity Mapping" src="./test_dataset/output/opacity.png" width="200">|<a href="https://colab.research.google.com/github/YertleTurtleGit/photometric-stereo-mappings/blob/main/opacity_map.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
-</a>
+</a>|
+|   |   |   |
+|   |   |   |
