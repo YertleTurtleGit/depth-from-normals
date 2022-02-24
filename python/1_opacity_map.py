@@ -108,16 +108,19 @@ def opacity_map(
 
     for light_image in np.concatenate((light_images, back_light_images)):
         light_image = np.clip(light_image * 255, 0, 255).astype("uint8")
-        
+
         light_image = cv.blur(light_image, (3, 3))
         canny = cv.Canny(light_image, 10, 245, 3)
         canny = cv.dilate(canny, de_kernel)
-        
-        _, flood_fill, _, _ = cv.floodFill(canny, None, (256, 0), 128)
+
+        _, flood_fill, _, _ = cv.floodFill(
+            canny, None, (round(light_image.shape[1] / 2), 0), 128
+        )
         opacity_map[flood_fill == 128] += 255 / 16
 
-    opacity_map[opacity_map < 255 * threshold] = 1
+    opacity_map[opacity_map < 255 * threshold] = 0
     opacity_map[opacity_map >= 255 * threshold] = 255
+    opacity_map = 255 - opacity_map
 
     if OUTPUT_PATH:
         cv.imwrite(output_path, opacity_map)
