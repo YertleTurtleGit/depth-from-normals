@@ -10,7 +10,7 @@ from skimage import io
 
 
 IS_NOTEBOOK: bool = False  # @param {type: "boolean"}
-AMBIENT_OCCLUSION_MAP_FILE_NAME: str = "ambient_occlusion.png"  # @param {type: "string"}
+ROUGHNESS_MAP_FILE_NAME: str = "roughness.png"  # @param {type: "string"}
 
 PATH_PREFIX: str = (
     "https://raw.githubusercontent.com/YertleTurtleGit/photometric-stereo-mappings/main/test_dataset/"
@@ -18,10 +18,10 @@ PATH_PREFIX: str = (
     else "./../test_dataset/"
 )
 
-HEIGHT_MAP_PATH:str = PATH_PREFIX + "output/height.png"
+NORMAL_MAP_PATH:str = PATH_PREFIX + "output/normal.png"
 MASK_PATH = PATH_PREFIX + "output/opacity.png"
 
-OUTPUT_PATH = None if IS_NOTEBOOK else PATH_PREFIX + "output/" + AMBIENT_OCCLUSION_MAP_FILE_NAME
+OUTPUT_PATH = None if IS_NOTEBOOK else PATH_PREFIX + "output/" + ROUGHNESS_MAP_FILE_NAME
 
 
 def _read_image(
@@ -82,37 +82,36 @@ def _read_image(
     return image
 
 
-def ambient_occlusion_map(height_map_path: str, output_path: str, mask_path: str):
-    """Calculates the ambient occlusion.
+def roughness_map(normal_map_path: str, output_path: str, mask_path: str):
+    """Calculates the pseudo roughness.
 
     Args:
-        height_map_path (str): _description_
+        normal_map_path (str): _description_
         output_path (str): _description_
         mask_path (str, optional): _description_. Defaults to None.
     """
-    height_map = _read_image(height_map_path, color=False)
+    normal_map = _read_image(normal_map_path, color=False)
     mask_image = _read_image(mask_path, color=False)
 
-    blurred_height_map = cv.blur(height_map, (3, 3))
+    blurred_normal_map = cv.blur(normal_map, (3, 3))
     blurred_mask = cv.blur(mask_image, (3, 3))
 
-    ambient_occlusion_map = height_map - blurred_height_map
-    ambient_occlusion_map[blurred_mask > 0] *= blurred_mask[blurred_mask > 0]
-    ambient_occlusion_map[blurred_mask < 1] *= 0.1
+    roughness_map = normal_map - blurred_normal_map
+    roughness_map[blurred_mask > 0] *= blurred_mask[blurred_mask > 0]
+    roughness_map[blurred_mask < 1] *= 0.1
 
-    ambient_occlusion_map -= np.min(ambient_occlusion_map)
-    ambient_occlusion_map /= np.max(ambient_occlusion_map)
-    ambient_occlusion_map[mask_image == 0] = 0
+    roughness_map *= -1
+    roughness_map -= np.min(roughness_map)
+    roughness_map /= np.max(roughness_map)
+    roughness_map[mask_image == 0] = 0
 
     if output_path:
-        ambient_occlusion_map = np.clip(ambient_occlusion_map * 255, 0, 255).astype(
-            "uint8"
-        )
-        cv.imwrite(output_path, ambient_occlusion_map)
+        roughness_map = np.clip(roughness_map * 255, 0, 255).astype("uint8")
+        cv.imwrite(output_path, roughness_map)
     else:
-        plt.imshow(ambient_occlusion_map)
+        plt.imshow(roughness_map)
 
 
 if __name__=="__main__":
-    ambient_occlusion_map(HEIGHT_MAP_PATH, OUTPUT_PATH, MASK_PATH)
+    roughness_map(NORMAL_MAP_PATH, OUTPUT_PATH, MASK_PATH)
 
