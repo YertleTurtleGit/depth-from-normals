@@ -102,7 +102,7 @@ def ambient_occlusion_map(height_map_path: str, output_path: str, mask_path: str
 
     ambient_occlusion_map -= np.min(ambient_occlusion_map)
     ambient_occlusion_map /= np.max(ambient_occlusion_map)
-    ambient_occlusion_map += 1
+    ambient_occlusion_map += 0.25
     ambient_occlusion_map[mask_image == 0] = 0
 
     if output_path:
