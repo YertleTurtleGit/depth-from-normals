@@ -101,7 +101,7 @@ def ambient_occlusion_map(
     ambient_occlusion_map /= np.max(ambient_occlusion_map)
 
     # TODO Fix high ao at the edges because of masked height mapping.
-    ambient_occlusion_map[ambient_occlusion_map > 0.458] = 0
+    ambient_occlusion_map[ambient_occlusion_map > 0.4645] = 0
     
     ambient_occlusion_map -= np.min(ambient_occlusion_map)
     ambient_occlusion_map /= np.max(ambient_occlusion_map)
