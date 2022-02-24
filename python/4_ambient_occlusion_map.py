@@ -96,15 +96,19 @@ def ambient_occlusion_map(
     blurred_height_map = cv.blur(height_map, (3, 3))
 
     ambient_occlusion_map = height_map - blurred_height_map
+
+    ambient_occlusion_map -= np.min(ambient_occlusion_map)
+    ambient_occlusion_map /= np.max(ambient_occlusion_map)
+
     # TODO Fix high ao at the edges because of masked height mapping.
-    ambient_occlusion_map[ambient_occlusion_map > 0.025] = 0
+    ambient_occlusion_map[ambient_occlusion_map > 0.458] = 0
 
     if mask_path:
         mask_image = _read_image(mask_path, color=False)
         ambient_occlusion_map[mask_image == 0] = 0
 
     if output_path:
-        cv.imwrite(output_path, ambient_occlusion_map)
+        cv.imwrite(output_path, ambient_occlusion_map * 255)
     else:
         plt.imshow(ambient_occlusion_map)
 
