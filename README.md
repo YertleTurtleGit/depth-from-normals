@@ -6,7 +6,7 @@
     <img title="Translucency Mapping" src="./test_dataset/output/translucency.png" width="200">
     <img title="Normal Mapping" src="./test_dataset/output/normal.png" width="200">
     <img title="Height Mapping" src="./test_dataset/output/height.png" width="200">
-    <img title="Ambient Occlusion Mapping" src="./test_dataset/output/ambient-occlusion.png" width="200">
+    <img title="Ambient Occlusion Mapping" src="./test_dataset/output/ambient_occlusion.png" width="200">
     <img title="Roughness Mapping" src="./test_dataset/output/roughness.png" width="200">
 </div>
 
