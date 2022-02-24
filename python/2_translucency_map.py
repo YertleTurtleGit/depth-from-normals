@@ -10,7 +10,7 @@ from skimage import io
 
 
 IS_NOTEBOOK: bool = False  # @param {type: "boolean"}
-TRANSLUCENCY_MAP_FILE_NAME: str = "albedo.png"  # @param {type: "string"}
+TRANSLUCENCY_MAP_FILE_NAME: str = "translucency.png"  # @param {type: "string"}
 
 PATH_PREFIX: str = (
     "https://raw.githubusercontent.com/YertleTurtleGit/photometric-stereo-mappings/main/test_dataset/"
@@ -108,6 +108,7 @@ def translucency_map(back_light_images_paths: List[str], output_path: str, mask_
         translucency_map[mask_image == 0] = (0, 0, 0)
 
     if output_path:
+        translucency_map = cv.cvtColor(translucency_map, cv.COLOR_BGR2RGB)
         cv.imwrite(output_path, translucency_map)
     else:
         plt.imshow(translucency_map)

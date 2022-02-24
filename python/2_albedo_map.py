@@ -108,6 +108,7 @@ def albedo_map(light_images_paths: List[str], output_path: str, mask_path: str =
         albedo_map[mask_image == 0] = (0, 0, 0)
 
     if output_path:
+        albedo_map = cv.cvtColor(albedo_map, cv.COLOR_BGR2RGB)
         cv.imwrite(output_path, albedo_map)
     else:
         plt.imshow(albedo_map)
