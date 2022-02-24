@@ -23,9 +23,6 @@ jobs:
               pip install jupyter
               pip install nbconvert
               if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-              
-         - name: Black Check for Jupyter notebooks
-           uses: marius-mather/black-check@jupyter
            
          - name: Commit formatted jupyter notebook files
            run: |
