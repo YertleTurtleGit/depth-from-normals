@@ -212,6 +212,7 @@ def normal_map(
     normal_map = np.reshape(normal_map, (height, width, 3))
 
     if OUTPUT_PATH:
+        normal_map = np.clip(normal_map * 255, 0, 255).astype("uint8")
         cv.imwrite(output_path, normal_map)
     else:
         plt.imshow(normal_map)
