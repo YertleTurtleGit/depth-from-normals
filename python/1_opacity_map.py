@@ -121,8 +121,10 @@ def opacity_map(
     opacity_map[opacity_map < 255 * threshold] = 0
     opacity_map[opacity_map >= 255 * threshold] = 255
     opacity_map = 255 - opacity_map
-    
-    opacity_map = cv.erode(opacity_map, de_kernel)
+
+    opacity_map = cv.erode(
+        opacity_map, cv.getStructuringElement(cv.MORPH_ELLIPSE, (5, 5))
+    )
 
     if output_path:
         cv.imwrite(output_path, opacity_map)
