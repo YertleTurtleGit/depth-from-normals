@@ -22,6 +22,7 @@ PATH_PREFIX: str = (
 LIGHT_IMAGE_PATHS: List[str] = [
     PATH_PREFIX + str(index) + ".png" for index in range(1, 8 + 1)
 ]
+MASK_PATH = PATH_PREFIX + "output/opacity.png"
 OUTPUT_PATH = None if IS_NOTEBOOK else PATH_PREFIX + "output/" + NORMAL_MAP_FILE_NAME
 
 
@@ -132,6 +133,7 @@ def _rpca_inexact_alm(D, lambda_=None, max_ite=1000, tol=1.0e-6):
 def normal_map(
     light_images_paths: List[str],
     output_path: str = None,
+    mask_path: str = None,
     open_gl: bool = True,
     pseudo_compress: bool = True,
     robust_lagrangian: bool = False,
@@ -153,7 +155,8 @@ def normal_map(
     Optical engineering 19.1 (1980): 139-144.
     Args:
         light_images_paths (List[str]): Paths to the light images.
-        output_path (str): Path where the output image file should be saved.
+        output_path (str, optional): Path where the output image file should be saved.
+        mask (str, optional): Path of the mask that gets applied on the normal map.
         open_gl (bool, optional): Inverts the y-/green-channel before normalization. Defaults to True.
         pseudo_compress (bool, optional): Normal map compressing with (n+1)/2. Defaults to True.
         robust_lagrangian (bool, optional): More robust against reflections and other errors that arise mainly when using non-polarized light sources.
@@ -211,7 +214,11 @@ def normal_map(
 
     normal_map = np.reshape(normal_map, (height, width, 3))
 
-    if OUTPUT_PATH:
+    if mask_path:
+        mask_image = _read_image(mask_path, color=False)
+        normal_map[mask_image == 0] = (0, 0, 0)
+
+    if output_path:
         normal_map = np.clip(normal_map * 255, 0, 255).astype("uint8")
         normal_map = cv.cvtColor(normal_map, cv.COLOR_BGR2RGB)
         cv.imwrite(output_path, normal_map)
@@ -219,6 +226,6 @@ def normal_map(
         plt.imshow(normal_map)
 
 
-if __name__ =="__main__":
-    normal_map(LIGHT_IMAGE_PATHS, OUTPUT_PATH)
+if __name__ == "__main__":
+    normal_map(LIGHT_IMAGE_PATHS, OUTPUT_PATH, MASK_PATH)
 

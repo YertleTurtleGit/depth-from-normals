@@ -3,14 +3,14 @@
 
 from typing import List
 from logging import warning
-import numpy as np
 import cv2 as cv
+import numpy as np
 from matplotlib import pyplot as plt
 from skimage import io
 
 
 IS_NOTEBOOK: bool = False  # @param {type: "boolean"}
-OPACITY_MAP_FILE_NAME: str = "opacity.png"  # @param {type: "string"}
+TRANSLUCENCY_MAP_FILE_NAME: str = "albedo.png"  # @param {type: "string"}
 
 PATH_PREFIX: str = (
     "https://raw.githubusercontent.com/YertleTurtleGit/photometric-stereo-mappings/main/test_dataset/"
@@ -18,13 +18,12 @@ PATH_PREFIX: str = (
     else "./../test_dataset/"
 )
 
-LIGHT_IMAGE_PATHS: List[str] = [
-    PATH_PREFIX + str(index) + ".png" for index in range(1, 8 + 1)
-]
 BACK_LIGHT_IMAGE_PATHS: List[str] = [
     PATH_PREFIX + str(index) + "b.png" for index in range(1, 8 + 1)
 ]
-OUTPUT_PATH = None if IS_NOTEBOOK else PATH_PREFIX + "output/" + OPACITY_MAP_FILE_NAME
+MASK_PATH = PATH_PREFIX + "output/opacity.png"
+
+OUTPUT_PATH = None if IS_NOTEBOOK else PATH_PREFIX + "output/" + TRANSLUCENCY_MAP_FILE_NAME
 
 
 def _read_image(
@@ -85,51 +84,35 @@ def _read_image(
     return image
 
 
-def opacity_map(
-    light_images_paths: List[str],
-    back_light_images_paths: List[str],
-    output_path: str = None,
-    threshold: float = 6 / 16,
-):
+def translucency_map(back_light_images_paths: List[str], output_path: str, mask_path: str = None):
+    """Computes the translucency mapping given the back light images and saves it to the output path if supplied.
+    Uses the exposure fusion algorithm.
+    Mertens, Tom, Jan Kautz, and Frank Van Reeth. "Exposure fusion." 15th Pacific Conference on Computer Graphics and Applications (PG'07). IEEE, 2007.
+    Args:
+        back_light_images_paths (List[str]): Paths of back light images from top lighting.
+        output_path (str): The path where the resulting albedo map is saved.
+        mask_path (str, optional): Path of the mask that gets applied on the albedo map.
+    """
 
-    light_images: List[np.ndarray] = [
-        _read_image(light_image_path) for light_image_path in light_images_paths
+    light_images = [
+        np.clip(_read_image(image_path) * 255, 0, 255).astype("uint8")
+        for image_path in back_light_images_paths
     ]
-    back_light_images: List[np.ndarray] = [
-        _read_image(back_light_images_path)
-        for back_light_images_path in back_light_images_paths
-    ]
 
-    opacity_map: np.ndarray = np.zeros(
-        (light_images[0].shape[0], light_images[0].shape[1])
-    )
+    merge_mertens = cv.createMergeMertens()
+    translucency_map = merge_mertens.process(light_images)
+    translucency_map = np.clip(translucency_map * 255, 0, 255).astype("uint8")
 
-    de_kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, (3, 3))
-
-    for light_image in np.concatenate((light_images, back_light_images)):
-        light_image = np.clip(light_image * 255, 0, 255).astype("uint8")
-
-        light_image = cv.blur(light_image, (3, 3))
-        canny = cv.Canny(light_image, 10, 245, 3)
-        canny = cv.dilate(canny, de_kernel)
-
-        _, flood_fill, _, _ = cv.floodFill(
-            canny, None, (round(light_image.shape[1] / 2), 0), 128
-        )
-        opacity_map[flood_fill == 128] += 255 / 16
-
-    opacity_map[opacity_map < 255 * threshold] = 0
-    opacity_map[opacity_map >= 255 * threshold] = 255
-    opacity_map = 255 - opacity_map
-    
-    opacity_map = cv.erode(opacity_map, de_kernel)
+    if mask_path:
+        mask_image = _read_image(mask_path, color=False)
+        translucency_map[mask_image == 0] = (0, 0, 0)
 
     if output_path:
-        cv.imwrite(output_path, opacity_map)
+        cv.imwrite(output_path, translucency_map)
     else:
-        plt.imshow(opacity_map)
+        plt.imshow(translucency_map)
 
 
 if __name__ == "__main__":
-    opacity_map(LIGHT_IMAGE_PATHS, BACK_LIGHT_IMAGE_PATHS, OUTPUT_PATH)
+    translucency_map(BACK_LIGHT_IMAGE_PATHS, OUTPUT_PATH, MASK_PATH)
 

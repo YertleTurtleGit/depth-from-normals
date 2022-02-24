@@ -264,7 +264,7 @@ def _integrate(
 
 def height_map(
     normal_map_path: str,
-    OPACITY_PATH: str,
+    opacity_path: str,
     output_path: str = None,
     normal_is_open_gl: bool = True,
     normal_is_pseudo_compressed: bool = False,
@@ -272,7 +272,7 @@ def height_map(
     max_thread_count: int = max(int(cpu_count() or 1), 1),
 ):
     normal_map = _read_image(normal_map_path)
-    mask = _read_image(OPACITY_PATH, color=False)
+    mask = _read_image(opacity_path, color=False)
     mask[mask < 0.5] = 0
     mask[mask >= 0.5] = 1
 
@@ -308,7 +308,9 @@ def height_map(
     height_map /= np.max(height_map)
     height_map *= pow(2, 8) - 1
 
-    if OUTPUT_PATH:
+    height_map[mask == 0] = 0
+
+    if output_path:
         cv.imwrite(output_path, height_map)
     else:
         plt.imshow(height_map)
