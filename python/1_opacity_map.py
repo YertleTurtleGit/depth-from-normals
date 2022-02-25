@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+# # Opacity Mapping from from Differently Lit Images with Edge Detection and Flood Fill
+
 from typing import List
 from logging import warning
 import numpy as np
