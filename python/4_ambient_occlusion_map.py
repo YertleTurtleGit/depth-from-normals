@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-from typing import List
+# # Ambient Occlusion Mapping from Height Mapping
+
+# This algorithm uses the normalized difference between the height mapping and its blurred version (comparable to a Gaussian difference except that the difference is not absolute but normalized).
+
 from logging import warning
 import cv2 as cv
 import numpy as np

@@ -1,6 +1,13 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+# # Normal Mapping from Differently Lit Images with Photometric Stereo
+
+# This method uses the 'photometric method for determining surface orientation from multiple images' proposed in the correspondent paper [1]. It supplies an option to make the result more robust against outliers often caused by non-polarized light [2].
+# 
+# * [1] Woodham, Robert J. "Photometric method for determining surface orientation from multiple images." Optical engineering 19.1 (1980): 139-144.
+# * [2] Wu, Lun, et al. "Robust photometric stereo via low-rank matrix completion and recovery." Asian Conference on Computer Vision. Springer, Berlin, Heidelberg, 2010.
+
 from typing import List
 from logging import warning
 import numpy as np

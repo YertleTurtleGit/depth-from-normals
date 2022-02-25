@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+# # Translucency Mapping from Differently Lit Images with Exposure Fusion
+
+# This method uses the 'Exposure Fusion' algorithm proposed in the correspondent paper [1].
+# 
+# * [1] Mertens, Tom, Jan Kautz, and Frank Van Reeth. "Exposure fusion." 15th Pacific Conference on Computer Graphics and Applications (PG'07). IEEE, 2007.
+
 from typing import List
 from logging import warning
 import cv2 as cv

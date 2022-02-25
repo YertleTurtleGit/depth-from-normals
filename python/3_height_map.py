@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Height Mapping
-# 
+# # Height Mapping from Normal Mapping with Averaged Integrals from Rotated Discrete Origin Functions
+
+# This algorithm estimates a 3d integral with the normal mapping. First the directional gradients of the normals in x- and y-direction are calculated. They are then used to calculate the integrated values by a cumulative sum (Riemann sum). This process is repeated with differently rotated versions of the gradient mapping to average the values and reduce errors as a cumulative sum alone is very prone for subsequent errors.
 
 # ## Imports
 # 
@@ -319,7 +320,7 @@ def height_map(
         progress_bar.update("")
 
 
-# ## Run
+# ## Example usage
 
 if __name__ == "__main__":
     height_map(
