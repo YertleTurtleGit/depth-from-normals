@@ -85,7 +85,7 @@ def _read_image(
     return image
 
 
-def roughness_map(normal_map_path: str, output_path: str, mask_path: str):
+def roughness_map(normal_map_path: str, output_path: str, mask_path: str) -> np.ndarray:
     """Calculates the pseudo roughness.
 
     Args:
@@ -109,10 +109,11 @@ def roughness_map(normal_map_path: str, output_path: str, mask_path: str):
     roughness_map[mask_image == 0] = 0
 
     if output_path:
-        roughness_map = np.clip(roughness_map * 255, 0, 255).astype("uint8")
-        cv.imwrite(output_path, roughness_map)
+        cv.imwrite(output_path, np.clip(roughness_map * 255, 0, 255).astype("uint8"))
     else:
         plt.imshow(roughness_map)
+
+    return roughness_map
 
 
 if __name__=="__main__":

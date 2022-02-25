@@ -92,7 +92,7 @@ def opacity_map(
     back_light_images_paths: List[str],
     output_path: str = None,
     threshold: float = 6 / 16,
-):
+) -> np.ndarray:
 
     light_images: List[np.ndarray] = [
         _read_image(light_image_path) for light_image_path in light_images_paths
@@ -132,6 +132,8 @@ def opacity_map(
         cv.imwrite(output_path, opacity_map)
     else:
         plt.imshow(opacity_map)
+
+    return opacity_map
 
 
 if __name__ == "__main__":

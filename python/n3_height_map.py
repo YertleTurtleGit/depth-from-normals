@@ -271,7 +271,7 @@ def height_map(
     normal_is_pseudo_compressed: bool = False,
     target_iteration_count: int = 250,
     max_thread_count: int = max(int(cpu_count() or 1), 1),
-):
+) -> np.ndarray:
     normal_map = _read_image(normal_map_path)
     mask = _read_image(opacity_path, color=False)
     mask[mask < 0.5] = 0
@@ -318,6 +318,8 @@ def height_map(
 
     if IS_NOTEBOOK:
         progress_bar.update("")
+
+    return height_map
 
 
 # ## Example usage

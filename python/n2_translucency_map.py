@@ -90,7 +90,9 @@ def _read_image(
     return image
 
 
-def translucency_map(back_light_images_paths: List[str], output_path: str, mask_path: str = None):
+def translucency_map(
+    back_light_images_paths: List[str], output_path: str, mask_path: str = None
+) -> np.ndarray:
     """Computes the translucency mapping given the back light images and saves it to the output path if supplied.
     Uses the exposure fusion algorithm.
     Mertens, Tom, Jan Kautz, and Frank Van Reeth. "Exposure fusion." 15th Pacific Conference on Computer Graphics and Applications (PG'07). IEEE, 2007.
@@ -114,10 +116,11 @@ def translucency_map(back_light_images_paths: List[str], output_path: str, mask_
         translucency_map[mask_image == 0] = (0, 0, 0)
 
     if output_path:
-        translucency_map = cv.cvtColor(translucency_map, cv.COLOR_BGR2RGB)
-        cv.imwrite(output_path, translucency_map)
+        cv.imwrite(output_path, cv.cvtColor(translucency_map, cv.COLOR_BGR2RGB))
     else:
         plt.imshow(translucency_map)
+
+    return translucency_map
 
 
 if __name__ == "__main__":

@@ -85,7 +85,9 @@ def _read_image(
     return image
 
 
-def ambient_occlusion_map(height_map_path: str, output_path: str, mask_path: str):
+def ambient_occlusion_map(
+    height_map_path: str, output_path: str, mask_path: str
+) -> np.ndarray:
     """Calculates the ambient occlusion.
 
     Args:
@@ -109,12 +111,13 @@ def ambient_occlusion_map(height_map_path: str, output_path: str, mask_path: str
     ambient_occlusion_map[mask_image == 0] = 0
 
     if output_path:
-        ambient_occlusion_map = np.clip(ambient_occlusion_map * 255, 0, 255).astype(
-            "uint8"
+        cv.imwrite(
+            output_path, np.clip(ambient_occlusion_map * 255, 0, 255).astype("uint8")
         )
-        cv.imwrite(output_path, ambient_occlusion_map)
     else:
         plt.imshow(ambient_occlusion_map)
+
+    return ambient_occlusion_map
 
 
 if __name__=="__main__":

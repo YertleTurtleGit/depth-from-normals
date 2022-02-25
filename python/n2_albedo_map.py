@@ -91,7 +91,7 @@ def _read_image(
     return image
 
 
-def albedo_map(light_images_paths: List[str], output_path: str, mask_path: str = None):
+def albedo_map(light_images_paths: List[str], output_path: str, mask_path: str = None) -> np.ndarray:
     """Computes the albedo mapping given the light images and saves it to the output path if supplied.
     Uses the exposure fusion algorithm.
     Mertens, Tom, Jan Kautz, and Frank Van Reeth. "Exposure fusion." 15th Pacific Conference on Computer Graphics and Applications (PG'07). IEEE, 2007.
@@ -113,12 +113,14 @@ def albedo_map(light_images_paths: List[str], output_path: str, mask_path: str =
     if mask_path:
         mask_image = _read_image(mask_path, color=False)
         albedo_map[mask_image == 0] = (0, 0, 0)
+        
 
     if output_path:
-        albedo_map = cv.cvtColor(albedo_map, cv.COLOR_BGR2RGB)
-        cv.imwrite(output_path, albedo_map)
+        cv.imwrite(output_path, cv.cvtColor(albedo_map, cv.COLOR_BGR2RGB))
     else:
         plt.imshow(albedo_map)
+        
+    return albedo_map
 
 
 if __name__ == "__main__":

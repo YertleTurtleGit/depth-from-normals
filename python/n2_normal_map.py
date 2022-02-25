@@ -156,7 +156,7 @@ def normal_map(
             [-0.240954, 0.327253, 0.913699],
         ]
     ),
-):
+) -> np.ndarray:
     """Computes and saves the normal mapping. Photometric stereo normal mapping.
     Woodham, Robert J. "Photometric method for determining surface orientation from multiple images."
     Optical engineering 19.1 (1980): 139-144.
@@ -226,11 +226,16 @@ def normal_map(
         normal_map[mask_image == 0] = (0, 0, 0)
 
     if output_path:
-        normal_map = np.clip(normal_map * 255, 0, 255).astype("uint8")
-        normal_map = cv.cvtColor(normal_map, cv.COLOR_BGR2RGB)
-        cv.imwrite(output_path, normal_map)
+        cv.imwrite(
+            output_path,
+            cv.cvtColor(
+                np.clip(normal_map * 255, 0, 255).astype("uint8"), cv.COLOR_BGR2RGB
+            ),
+        )
     else:
         plt.imshow(normal_map)
+
+    return normal_map
 
 
 if __name__ == "__main__":
