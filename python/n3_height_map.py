@@ -166,7 +166,7 @@ if IS_NOTEBOOK:
 
 # $
 # \displaystyle
-# \int f(x,y) \approx \sum_{\theta = 0}^{2\pi} \sum_{x=0}^{x_{max}} f(x,y) R_{\theta}, \text{ where } x,y \in \N \text{ and } \theta \in [ 0, 2\pi ] \cap \R
+# \int f(x,y) \approx \sum_{\theta = 0}^{2\pi} \sum_{x=0}^{x_{max}} f(x,y) R_{\theta}, \text{ where } x,y \in \mathbb{N} \text{ and } \theta \in [ 0, 2\pi ] \cap \mathbb{R}
 # $
 
 def _integrate(
