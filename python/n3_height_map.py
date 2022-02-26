@@ -164,6 +164,11 @@ if IS_NOTEBOOK:
     plt.imshow(albedo)
 
 
+# $
+# \displaystyle
+# \int f(x,y) \approx \sum_{\theta = 0}^{2\pi} \sum_{x=0}^{x_{max}} f(x,y) R_{\theta}, \text{ where } x,y \in \N \text{ and } \theta \in [ 0, 2\pi ] \cap \R
+# $
+
 def _integrate(
     normal_map: np.ndarray,
     normal_is_open_gl: bool,
