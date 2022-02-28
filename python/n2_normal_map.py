@@ -201,7 +201,7 @@ def normal_map(
 
     # calculate least squares
     N = np.linalg.lstsq(L.T, A, rcond=None)[0].T
-    N[:, 2] = 1
+    N[:, 2] = 0.5
     N = normalize(N)
 
     # vector field to mapping image
