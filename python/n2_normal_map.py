@@ -201,11 +201,8 @@ def normal_map(
 
     # calculate least squares
     N = np.linalg.lstsq(L.T, A, rcond=None)[0].T
+    N[:, 2] = 1
     N = normalize(N)
-    # N_lengths = np.sqrt(N[:,0]*N[:,0] + N[:,1]*N[:,1] + N[:,2]*N[:,2])
-    # N[:,0][N_lengths != 0] /= N_lengths[N_lengths != 0]
-    # N[:,1][N_lengths != 0] /= N_lengths[N_lengths != 0]
-    # N[:,2][N_lengths != 0] /= N_lengths[N_lengths != 0]
 
     # vector field to mapping image
 
@@ -213,11 +210,6 @@ def normal_map(
         N[:, 1] *= -1
 
     N = N * 0.5 + 0.5  # transforms from [-1,1] to [0,1]
-
-    # TODO Implement pseudo compression.
-    # if pseudo_compress:
-    # N /= 2
-    # N += 1
 
     print(np.min(N))
     print(np.max(N))
@@ -233,7 +225,7 @@ def normal_map(
 
     if mask_path:
         mask_image = _read_image(mask_path, color=False)
-        kernel = np.ones((7, 7), np.uint8)
+        kernel = np.ones((3, 3), np.uint8)
         mask_image = cv.erode(mask_image, kernel)
         normal_map[mask_image == 0] = (0, 0, 0)
 
