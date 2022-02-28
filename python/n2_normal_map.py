@@ -201,10 +201,26 @@ def normal_map(
 
     # calculate least squares
     N = np.linalg.lstsq(L.T, A, rcond=None)[0].T
+    N = normalize(N)
+    # N_lengths = np.sqrt(N[:,0]*N[:,0] + N[:,1]*N[:,1] + N[:,2]*N[:,2])
+    # N[:,0][N_lengths != 0] /= N_lengths[N_lengths != 0]
+    # N[:,1][N_lengths != 0] /= N_lengths[N_lengths != 0]
+    # N[:,2][N_lengths != 0] /= N_lengths[N_lengths != 0]
 
     # vector field to mapping image
+
     if open_gl:
         N[:, 1] *= -1
+
+    N = N * 0.5 + 0.5  # transforms from [-1,1] to [0,1]
+
+    # TODO Implement pseudo compression.
+    # if pseudo_compress:
+    # N /= 2
+    # N += 1
+
+    print(np.min(N))
+    print(np.max(N))
 
     if robust_lagrangian:
         normal_map = np.zeros((M.shape[0], 3))
@@ -212,12 +228,6 @@ def normal_map(
             normal_map[:, :] = N[:, :]
     else:
         normal_map = np.reshape(N, (M.shape[0], 3))
-
-    normal_map = normalize(normal_map)
-
-    if pseudo_compress:
-        normal_map[:, :2] += 1
-        normal_map[:, :2] /= 2
 
     normal_map = np.reshape(normal_map, (height, width, 3))
 
