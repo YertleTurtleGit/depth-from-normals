@@ -108,17 +108,27 @@ def opacity_map(
 
     de_kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, (3, 3))
 
+    light_image_sum = np.zeros((opacity_map.shape))
+    for light_image in light_images:
+        light_image_sum += (
+            light_image[:, :, 0] + light_image[:, :, 1] + light_image[:, :, 2]
+        ) / 3
+    for light_image in back_light_images:
+        light_image_sum += (
+            light_image[:, :, 0] + light_image[:, :, 1] + light_image[:, :, 2]
+        ) / 3
+
     for light_image in np.concatenate((light_images, back_light_images)):
         light_image = np.clip(light_image * 255, 0, 255).astype("uint8")
 
         light_image = cv.blur(light_image, (3, 3))
-        canny = cv.Canny(light_image, 10, 245, 3)
-        canny = cv.dilate(canny, de_kernel)
+        light_image = cv.Canny(light_image, 10, 245, 3)
+        light_image = cv.dilate(light_image, de_kernel)
 
-        _, flood_fill, _, _ = cv.floodFill(
-            canny, None, (round(light_image.shape[1] / 2), 0), 128
+        _, light_image, _, _ = cv.floodFill(
+            light_image, None, (round(light_image.shape[1] / 2), 0), 128
         )
-        opacity_map[flood_fill == 128] += 255 / 16
+        opacity_map[light_image == 128] += 255 / 16
 
     opacity_map[opacity_map < 255 * threshold] = 0
     opacity_map[opacity_map >= 255 * threshold] = 255
@@ -127,6 +137,8 @@ def opacity_map(
     opacity_map = cv.erode(
         opacity_map, cv.getStructuringElement(cv.MORPH_ELLIPSE, (4, 4))
     )
+
+    opacity_map[light_image_sum < 12 / 16] = 0
 
     if output_path:
         cv.imwrite(output_path, opacity_map)

@@ -142,7 +142,7 @@ def normal_map(
     output_path: str = None,
     mask_path: str = None,
     open_gl: bool = True,
-    pseudo_compress: bool = True,
+    sigma: int = 10,
     robust_lagrangian: bool = False,
     light_positions: np.ndarray = np.array(
         [
@@ -201,7 +201,7 @@ def normal_map(
 
     # calculate least squares
     N = np.linalg.lstsq(L.T, A, rcond=None)[0].T
-    N[:, 2] = 0.5
+    N[:, 2] *= sigma
     N = normalize(N)
 
     # vector field to mapping image
@@ -225,8 +225,6 @@ def normal_map(
 
     if mask_path:
         mask_image = _read_image(mask_path, color=False)
-        kernel = np.ones((3, 3), np.uint8)
-        mask_image = cv.erode(mask_image, kernel)
         normal_map[mask_image == 0] = (0, 0, 0)
 
     if output_path:
