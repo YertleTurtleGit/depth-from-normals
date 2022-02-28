@@ -143,7 +143,7 @@ def normal_map(
     mask_path: str = None,
     open_gl: bool = True,
     sigma: int = 10,
-    robust_lagrangian: bool = False,
+    robust_lagrangian: bool = True,
     light_positions: np.ndarray = np.array(
         [
             [-0.389346, 0.0836132, 0.917289],
@@ -201,7 +201,8 @@ def normal_map(
 
     # calculate least squares
     N = np.linalg.lstsq(L.T, A, rcond=None)[0].T
-    N[:, 2] *= sigma
+    # N[:, 2] *= sigma
+    # N[:, 2] -= np.median(N[:, 2])
     N = normalize(N)
 
     # vector field to mapping image
