@@ -230,12 +230,11 @@ def normal_map(
         normal_map = np.reshape(N, (M.shape[0], 3))
 
     normal_map = np.reshape(normal_map, (height, width, 3))
-    
-    kernel = np.ones((7, 7), np.uint8)
-    normal_map = cv.erode(normal_map, kernel)
 
     if mask_path:
         mask_image = _read_image(mask_path, color=False)
+        kernel = np.ones((7, 7), np.uint8)
+        mask_image = cv.erode(mask_image, kernel)
         normal_map[mask_image == 0] = (0, 0, 0)
 
     if output_path:
