@@ -15,6 +15,7 @@ import cv2 as cv
 from sklearn.preprocessing import normalize
 from matplotlib import pyplot as plt
 from skimage import io
+import math
 
 
 IS_NOTEBOOK: bool = False  # @param {type: "boolean"}
@@ -143,7 +144,7 @@ def normal_map(
     mask_path: str = None,
     open_gl: bool = True,
     sigma: int = 10,
-    robust_lagrangian: bool = True,
+    robust_lagrangian: bool = False,
     light_positions: np.ndarray = np.array(
         [
             [-0.389346, 0.0836132, 0.917289],
@@ -201,19 +202,45 @@ def normal_map(
 
     # calculate least squares
     N = np.linalg.lstsq(L.T, A, rcond=None)[0].T
-    # N[:, 2] *= sigma
-    # N[:, 2] -= np.median(N[:, 2])
-    N = normalize(N)
+
+    # spherical = np.zeros(N.shape)
+    # spherical[:, 0] = np.sqrt(N[:, 0] * N[:, 0] + N[:, 1] * N[:, 1] + N[:, 2] * N[:, 2])
+    # spherical[:, 2] = np.arccos(N[:, 2], spherical[:, 0])
+    # spherical[:, 1] = np.arctan2(N[:, 1], N[:, 0])
+
+    # # spherical[:, 1] *= 2
+
+    # N[:, 0] = spherical[:, 0] * np.cos(spherical[:, 1]) * np.sin(spherical[:, 2])
+    # N[:, 1] = spherical[:, 0] * np.sin(spherical[:, 1]) * np.sin(spherical[:, 2])
+    # N[:, 2] = spherical[:, 0] * np.cos(spherical[:, 2])
+    # N = np.nan_to_num(N)
+
+    falloff_image = np.zeros((width, height, 3))
+    for x in range(0, width):
+        for y in range(0, height):
+            r_x: float = 1 - (x / width)
+            r_y: float = y / height
+            falloff_image[x, y, 0] = r_x  / sigma
+            falloff_image[x, y, 1] = r_y  / sigma  # math.pow(r_y, sigma)
+
+    falloff_image = np.array(
+        [
+            falloff_image[:, :, 0].flatten(),
+            falloff_image[:, :, 1].flatten(),
+            falloff_image[:, :, 2].flatten(),
+        ]
+    ).T
+
+    N -= falloff_image
 
     # vector field to mapping image
 
     if open_gl:
         N[:, 1] *= -1
 
-    N = N * 0.5 + 0.5  # transforms from [-1,1] to [0,1]
+    N = normalize(N)
 
-    print(np.min(N))
-    print(np.max(N))
+    N = N * 0.5 + 0.5  # transforms from [-1,1] to [0,1]
 
     if robust_lagrangian:
         normal_map = np.zeros((M.shape[0], 3))
@@ -242,5 +269,6 @@ def normal_map(
 
 
 if __name__ == "__main__":
+    OUTPUT_PATH = "./test_dataset/output/normal.png"
     normal_map(LIGHT_IMAGE_PATHS, OUTPUT_PATH, MASK_PATH)
 
