@@ -215,13 +215,14 @@ def normal_map(
     # N[:, 2] = spherical[:, 0] * np.cos(spherical[:, 2])
     # N = np.nan_to_num(N)
 
-    falloff_image = np.zeros((width, height, 3))
+    falloff_image = np.ones((width, height, 3))
+
     for x in range(0, width):
         for y in range(0, height):
             r_x: float = 1 - (x / width)
             r_y: float = y / height
-            falloff_image[x, y, 0] = r_x  / sigma
-            falloff_image[x, y, 1] = r_y  / sigma  # math.pow(r_y, sigma)
+            falloff_image[x, y, 0] = r_x / sigma
+            falloff_image[x, y, 1] = r_y / sigma  # math.pow(r_y, sigma)
 
     falloff_image = np.array(
         [
@@ -231,7 +232,7 @@ def normal_map(
         ]
     ).T
 
-    N -= falloff_image
+    N *= falloff_image
 
     # vector field to mapping image
 
