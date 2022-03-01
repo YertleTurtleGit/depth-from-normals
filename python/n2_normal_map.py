@@ -166,7 +166,6 @@ def normal_map(
         output_path (str, optional): Path where the output image file should be saved.
         mask (str, optional): Path of the mask that gets applied on the normal map.
         open_gl (bool, optional): Inverts the y-/green-channel before normalization. Defaults to True.
-        pseudo_compress (bool, optional): Normal map compressing with (n+1)/2. Defaults to True.
         robust_lagrangian (bool, optional): More robust against reflections and other errors that arise mainly when using non-polarized light sources.
                                             Wu, Lun, et al. "Robust photometric stereo via low-rank matrix completion and recovery."
                                             Asian Conference on Computer Vision. Springer, Berlin, Heidelberg, 2010.
@@ -219,10 +218,10 @@ def normal_map(
 
     for x in range(0, width):
         for y in range(0, height):
-            r_x: float = 1 - (x / width)
-            r_y: float = y / height
-            falloff_image[x, y, 0] = r_x / sigma
-            falloff_image[x, y, 1] = r_y / sigma  # math.pow(r_y, sigma)
+            r_x: float = 1-(y / height)
+            r_y: float = 1-(x / width)
+            falloff_image[x, y, 0] = r_x #math.pow(r_x, 2) #/ sigma #r_x * r_x #/ sigma
+            falloff_image[x, y, 1] = r_y #math.pow(r_y, 2) #/ sigma #r_y * r_y #/ sigma  # 
 
     falloff_image = np.array(
         [
