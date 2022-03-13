@@ -1,4 +1,4 @@
-[![Run Jupyter Notebook](https://github.com/YertleTurtleGit/photometric-stereo-mappings/actions/workflows/jupyter_to_python.yml/badge.svg?branch=main)](https://github.com/YertleTurtleGit/photometric-stereo-mappings/actions/workflows/run_jupyter.yml)
+[![Run Jupyter Notebooks](https://github.com/YertleTurtleGit/normals-to-depth/actions/workflows/run_jupyter.yml/badge.svg)](https://github.com/YertleTurtleGit/normals-to-depth/actions/workflows/run_jupyter.yml)
 
 # Normals to Depth (WIP)
 
