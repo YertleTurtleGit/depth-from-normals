@@ -1,4 +1,4 @@
-name: Run Jupyter Notebooks
+name: Jupyter Notebook
 
 on:
    push:
