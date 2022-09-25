@@ -1,0 +1,29 @@
+name: Map Pipeline Check
+
+on:
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+   generate_readme:
+      runs-on: ubuntu-latest
+
+      steps:
+         - uses: actions/checkout@v2
+
+         - name: Install dependencies
+           run: |
+              python -m pip install --upgrade pip
+              pip install jupyter
+              pip install nbconvert
+              pip install black_nbconvert
+              pip install markupsafe==2.0.1
+              if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+              git config --local user.email "action@github.com"
+              git config --local user.name "GitHub Action"
+         
+         - name: Convert README ipynb to md
+           run: |
+              rm -r README_files
+              jupyter nbconvert --to markdown --execute README.ipynb

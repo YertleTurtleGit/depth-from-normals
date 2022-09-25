@@ -1,0 +1,56 @@
+name: Map Pipeline
+
+on:
+   push:
+      branches: [main]
+
+jobs:
+   generate_readme:
+      runs-on: ubuntu-latest
+
+      steps:
+         - uses: actions/checkout@v2
+
+         - name: Install dependencies
+           run: |
+              python -m pip install --upgrade pip
+              pip install jupyter
+              pip install nbconvert
+              pip install black_nbconvert
+              pip install markupsafe==2.0.1
+              if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+              git config --local user.email "action@github.com"
+              git config --local user.name "GitHub Action"
+         
+         - name: Clear and format Jupyter Notebook output
+           run: |
+              jupyter nbconvert --clear-output --inplace *.ipynb
+              black_nbconvert .
+           
+         - name: Commit cleared and formatted jupyter notebook
+           run: |
+              git add *.ipynb
+              git commit -m "format and clear jupyter notebook output" || echo "No changes to commit"
+         
+         - name: Convert README ipynb to md
+           run: |
+              rm -r README_files
+              jupyter nbconvert --to markdown --execute README.ipynb
+
+         - name: Commit README
+           run: |
+              git add README.md README_files
+              git commit -m "update readme files" || echo "No changes to commit"
+
+         - name: Push changes
+           uses: ad-m/github-push-action@v0.6.0
+           with:
+              github_token: ${{ secrets.GITHUB_TOKEN }}
+              branch: main
+
+   generate_readme_toc:
+    needs: generate_readme
+    name: Generate TOC
+    runs-on: ubuntu-latest
+    steps:
+      - uses: technote-space/toc-generator@v4
