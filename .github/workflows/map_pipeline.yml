@@ -34,7 +34,7 @@ jobs:
          
          - name: Convert README ipynb to md
            run: |
-              rm -r README_files
+              rm -rf README_files
               jupyter nbconvert --to markdown --execute README.ipynb
 
          - name: Commit README
