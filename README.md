@@ -1,28 +1,18 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**
+[![Map Pipeline](https://github.com/YertleTurtleGit/depth-from-normals/actions/workflows/map_pipeline.yml/badge.svg)](https://github.com/YertleTurtleGit/depth-from-normals/actions/workflows/map_pipeline.yml)
+[![Lint](https://github.com/YertleTurtleGit/depth-from-normals/actions/workflows/lint.yml/badge.svg)](https://github.com/YertleTurtleGit/depth-from-normals/actions/workflows/lint.yml)
+<a target="_blank" href="https://colab.research.google.com/github/YertleTurtleGit/depth-from-normals">
+<img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+</a>
 
-- [Depth Mapping from Normal Mapping with Averaged Integrals from Rotated Discrete Origin Functions](#depth-mapping-from-normal-mapping-with-averaged-integrals-from-rotated-discrete-origin-functions)
-  - [Imports](#imports)
-  - [Example usage](#example-usage)
 
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-# Depth Mapping from Normal Mapping with Averaged Integrals from Rotated Discrete Origin Functions
+# Introduction
 
 
 This algorithm estimates a 3d integral with the normal mapping. First the directional gradients of the normals in x- and y-direction are calculated. They are then used to calculate the integrated values by a cumulative sum (Riemann sum). This process is repeated with differently rotated versions of the gradient mapping to average the values and reduce errors as a cumulative sum alone is very prone for subsequent errors.
 
 
+# Source code
 
-```python
-# @title Settings
-NORMAL_MAP_PATH: str = "https://raw.githubusercontent.com/YertleTurtleGit/depth-from-normals/main/normal_mapping.png"  # @param {type: "string"}
-NORMAL_MAP_IS_OPEN_GL: bool = True  # @param {type: "boolean"}
-TARGET_ITERATION_COUNT: int = 1000
-MAX_THREAD_COUNT: int = 4  # @param {type: "integer"}
-DEPTH_MAP_PATH: str = "depth_mapping.png"  # @param {type: "string"}
-```
 
 ## Imports
 
@@ -39,10 +29,165 @@ from typing import List
 from matplotlib import pyplot as plt
 ```
 
+## Input & Settings
+
+
+
+```python
+NORMAL_MAP_A_PATH: str = "https://raw.githubusercontent.com/YertleTurtleGit/depth-from-normals/main/normal_mapping_a.png"  # @param {type: "string"}
+NORMAL_MAP_B_PATH: str = "https://raw.githubusercontent.com/YertleTurtleGit/depth-from-normals/main/normal_mapping_b.png"
+NORMAL_MAP_A_IMAGE: np.ndarray = io.imread(NORMAL_MAP_A_PATH)
+NORMAL_MAP_B_IMAGE: np.ndarray = io.imread(NORMAL_MAP_B_PATH)
+
+NORMAL_MAP_IS_OPEN_GL: bool = True  # @param {type: "boolean"}
+TARGET_ITERATION_COUNT: int = 1000  # @param {type: "integer"}
+MAX_THREAD_COUNT: int = 4  # @param {type: "integer"}
+```
+
+
+```python
+# Source: commons.wikimedia.org
+plt.imshow(NORMAL_MAP_A_IMAGE)
+```
+
+
+
+
+    <matplotlib.image.AxesImage at 0x7faf94545ee0>
+
+
+
+
+    
+![png](README_files/README_8_1.png)
+    
+
+
+
+```python
+# Source: learnopengl.com
+plt.imshow(NORMAL_MAP_B_IMAGE)
+```
+
+
+
+
+    <matplotlib.image.AxesImage at 0x7faf94484a00>
+
+
+
+
+    
+![png](README_files/README_9_1.png)
+    
+
+
+## Sub-methods
+
+
+### Gradient Map
+
+
+```python
+def calculate_gradient_map(
+    normal_map: np.ndarray, normal_map_is_open_gl: bool = True
+) -> np.ndarray:
+    width, height, _ = normal_map.shape
+    normal_map = normal_map[:, :, :3]  # Remove alpha channel if present.
+    normal_map = ((normal_map / 255) - 0.5) * 2  # Transform from [0, 255] to [-1, 1].
+    if not normal_map_is_open_gl:
+        normal_map[:, :, 1] *= -1  # Invert green/y channel if not OpenGL.
+
+    gradient_map = np.empty((width, height, 2), dtype=np.float64)
+    gradient_map[:, :, 0] = -normal_map[:, :, 0] / normal_map[:, :, 2]
+    gradient_map[:, :, 1] = normal_map[:, :, 1] / normal_map[:, :, 2]
+    return gradient_map
+
+
+gradient_map_image = calculate_gradient_map(NORMAL_MAP_A_IMAGE)
+gradient_map_image -= np.min(gradient_map_image)
+gradient_map_image /= np.max(gradient_map_image)
+gradient_map_image = (gradient_map_image * 255).astype(np.uint8)
+
+_, axis_array = plt.subplots(1, 2)
+axis_array[0].set_title("horizontal gradient")
+axis_array[0].imshow(gradient_map_image[:, :, 0])
+axis_array[1].set_title("vertical gradient")
+axis_array[1].imshow(gradient_map_image[:, :, 1])
+```
+
+
+
+
+    <matplotlib.image.AxesImage at 0x7faf943ad100>
+
+
+
+
+    
+![png](README_files/README_12_1.png)
+    
+
+
+### Rotation
+
+
+```python
+def rotate(image: np.ndarray, angle: float, resize: bool = True) -> np.ndarray:
+    from math import sqrt, ceil
+    from cv2 import getRotationMatrix2D, warpAffine
+
+    height, width = image.shape[:2]
+    new_height: int = height
+    new_width: int = width
+
+    if resize:
+        # TODO optimize new resolution
+        image_diagonal_length: int = ceil(sqrt(height**2 + width**2))
+        angle_radians = radians(angle)
+        new_height = image_diagonal_length
+        new_width = image_diagonal_length
+
+    channel_count = image.shape[2] if len(image.shape) == 3 else 1
+    shape = (
+        (new_height, new_width)
+        if channel_count == 1
+        else (new_height, new_width, channel_count)
+    )
+    rotated_image = np.zeros(shape, dtype=image.dtype)
+
+    if resize:
+        rotated_image[
+            (new_height - height) // 2 : (new_height + height) // 2,
+            (new_width - width) // 2 : (new_width + width) // 2,
+        ] = image
+    else:
+        rotated_image = image
+
+    rotation_matrix = getRotationMatrix2D((new_width // 2, new_height // 2), angle, 1)
+    return warpAffine(rotated_image, rotation_matrix, rotated_image.shape[:2])
+
+
+plt.imshow(rotate(NORMAL_MAP_A_IMAGE, 20))
+```
+
+
+
+
+    <matplotlib.image.AxesImage at 0x7faf94344b80>
+
+
+
+
+    
+![png](README_files/README_14_1.png)
+    
+
+
 
 ```python
 def estimate_depth_map(
-    normal_map_uri: str,
+    normal_map: np.ndarray,
     normal_map_is_open_gl: bool = True,
     target_iteration_count: int = 1000,
     max_thread_count: int = 1,
@@ -65,49 +210,11 @@ def estimate_depth_map(
     np.ndarray
         The depth mapping as image array.
     """
-
-    normal_map = io.imread(normal_map_uri).astype(np.float64)
     width, height, _ = normal_map.shape
-    normal_map = normal_map[:, :, :3]  # Remove alpha channel if present.
-    normal_map = ((normal_map / 255) - 0.5) * 2  # Transform from [0, 255] to [-1, 1].
-    if not normal_map_is_open_gl:
-        normal_map[:, :, 1] *= -1  # Invert green/y channel if not OpenGL.
-
-    gradient_map = np.empty((width, height, 2))
-    gradient_map[:, :, 0] = -normal_map[:, :, 0] / normal_map[:, :, 2]
-    gradient_map[:, :, 1] = normal_map[:, :, 1] / normal_map[:, :, 2]
+    gradient_map = calculate_gradient_map(normal_map, normal_map_is_open_gl)
 
     isotropic_integral = np.zeros((width, height))
     isotropic_integral_lock: Lock = Lock()
-
-    def rotate(image: np.ndarray, angle: float, resize: bool = True) -> np.ndarray:
-        from math import sqrt, ceil
-        from cv2 import getRotationMatrix2D, warpAffine
-
-        height, width = image.shape[:2]
-        new_height: int = height
-        new_width: int = width
-
-        if resize:
-            # TODO optimize new resolution
-            image_diagonal_length: int = ceil(sqrt(height**2 + width**2))
-            new_height = image_diagonal_length
-            new_width = image_diagonal_length
-
-        rotation_image = np.zeros((new_height, new_width))
-
-        if resize:
-            rotation_image[
-                (new_height - height) // 2 : (new_height + height) // 2,
-                (new_width - width) // 2 : (new_width + width) // 2,
-            ] = image
-        else:
-            rotation_image = image
-
-        rotation_matrix = getRotationMatrix2D(
-            (new_width // 2, new_height // 2), angle, 1
-        )
-        return warpAffine(rotation_image, rotation_matrix, rotation_image.shape)
 
     def integrate_anisotropic(angles: List[float]):
 
@@ -172,31 +279,55 @@ def estimate_depth_map(
     return depth_map
 ```
 
+
+```python
+figure, axis_array = plt.subplots(1, 3)
+figure.set_size_inches((12, 5))
+
+for index in range(3):
+    iteration_count = max(index * 100, 1)
+    axis_array[index].set_title(f"iteration count: {iteration_count}")
+
+    depth_map_image: np.ndarray = estimate_depth_map(
+        NORMAL_MAP_B_IMAGE,
+        normal_map_is_open_gl=NORMAL_MAP_IS_OPEN_GL,
+        target_iteration_count=iteration_count,
+        max_thread_count=MAX_THREAD_COUNT,
+    )
+
+    axis_array[index].imshow(depth_map_image, cmap="gray")
+```
+
+
+    
+![png](README_files/README_16_0.png)
+    
+
+
 ## Example usage
 
 
 
 ```python
 depth_map_image: np.ndarray = estimate_depth_map(
-    NORMAL_MAP_PATH,
+    NORMAL_MAP_A_IMAGE,
     normal_map_is_open_gl=NORMAL_MAP_IS_OPEN_GL,
     target_iteration_count=TARGET_ITERATION_COUNT,
     max_thread_count=MAX_THREAD_COUNT,
 )
 
-cv.imwrite(DEPTH_MAP_PATH, depth_map_image)
 plt.imshow(depth_map_image, cmap="gray")
 ```
 
 
 
 
-    <matplotlib.image.AxesImage at 0x7f2cb7f98520>
+    <matplotlib.image.AxesImage at 0x7faf941c3910>
 
 
 
 
     
-![png](README_files/README_7_1.png)
+![png](README_files/README_18_1.png)
     
 
