@@ -1,18 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**
-
-- [Introduction](#introduction)
-- [Source code](#source-code)
-  - [Imports](#imports)
-  - [Input & Settings](#input--settings)
-  - [Sub-methods](#sub-methods)
-    - [Gradient Map](#gradient-map)
-    - [Rotation](#rotation)
-  - [Example usage](#example-usage)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 [![Map Pipeline](https://github.com/YertleTurtleGit/depth-from-normals/actions/workflows/map_pipeline.yml/badge.svg)](https://github.com/YertleTurtleGit/depth-from-normals/actions/workflows/map_pipeline.yml)
 [![Lint](https://github.com/YertleTurtleGit/depth-from-normals/actions/workflows/lint.yml/badge.svg)](https://github.com/YertleTurtleGit/depth-from-normals/actions/workflows/lint.yml)
 <a target="_blank" href="https://colab.research.google.com/github/YertleTurtleGit/depth-from-normals">
@@ -68,7 +53,7 @@ plt.imshow(NORMAL_MAP_A_IMAGE)
 
 
 
-    <matplotlib.image.AxesImage at 0x7faf94545ee0>
+    <matplotlib.image.AxesImage at 0x7f40b0041e20>
 
 
 
@@ -87,7 +72,7 @@ plt.imshow(NORMAL_MAP_B_IMAGE)
 
 
 
-    <matplotlib.image.AxesImage at 0x7faf94484a00>
+    <matplotlib.image.AxesImage at 0x7f40aff80940>
 
 
 
@@ -134,7 +119,7 @@ axis_array[1].imshow(gradient_map_image[:, :, 1])
 
 
 
-    <matplotlib.image.AxesImage at 0x7faf943ad100>
+    <matplotlib.image.AxesImage at 0x7f40afe98640>
 
 
 
@@ -189,7 +174,7 @@ plt.imshow(rotate(NORMAL_MAP_A_IMAGE, 20))
 
 
 
-    <matplotlib.image.AxesImage at 0x7faf94344b80>
+    <matplotlib.image.AxesImage at 0x7f40afe3f400>
 
 
 
@@ -337,7 +322,7 @@ plt.imshow(depth_map_image, cmap="gray")
 
 
 
-    <matplotlib.image.AxesImage at 0x7faf941c3910>
+    <matplotlib.image.AxesImage at 0x7f40afcb5070>
 
 
 
