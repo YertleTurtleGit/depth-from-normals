@@ -1,3 +1,13 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**
+
+- [Depth Mapping from Normal Mapping with Averaged Integrals from Rotated Discrete Origin Functions](#depth-mapping-from-normal-mapping-with-averaged-integrals-from-rotated-discrete-origin-functions)
+  - [Imports](#imports)
+  - [Example usage](#example-usage)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Depth Mapping from Normal Mapping with Averaged Integrals from Rotated Discrete Origin Functions
 
 
