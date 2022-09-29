@@ -1,3 +1,19 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**
+
+- [Introduction](#introduction)
+- [Source code](#source-code)
+  - [Imports](#imports)
+  - [Input & Settings](#input--settings)
+  - [Sub-methods](#sub-methods)
+    - [Gradient Map](#gradient-map)
+    - [Rotation](#rotation)
+  - [Height Mapping](#height-mapping)
+  - [Example usage](#example-usage)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 [![Map Pipeline](https://github.com/YertleTurtleGit/depth-from-normals/actions/workflows/map_pipeline.yml/badge.svg)](https://github.com/YertleTurtleGit/depth-from-normals/actions/workflows/map_pipeline.yml)
 [![Lint](https://github.com/YertleTurtleGit/depth-from-normals/actions/workflows/lint.yml/badge.svg)](https://github.com/YertleTurtleGit/depth-from-normals/actions/workflows/lint.yml)
 <a target="_blank" href="https://colab.research.google.com/github/YertleTurtleGit/depth-from-normals">
