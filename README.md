@@ -1,19 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**
-
-- [Introduction](#introduction)
-- [Source code](#source-code)
-  - [Imports](#imports)
-  - [Input & Settings](#input--settings)
-  - [Sub-methods](#sub-methods)
-    - [Gradient Map](#gradient-map)
-    - [Rotation](#rotation)
-  - [Height Mapping](#height-mapping)
-  - [Example usage](#example-usage)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 [![Map Pipeline](https://github.com/YertleTurtleGit/depth-from-normals/actions/workflows/map_pipeline.yml/badge.svg)](https://github.com/YertleTurtleGit/depth-from-normals/actions/workflows/map_pipeline.yml)
 [![Lint](https://github.com/YertleTurtleGit/depth-from-normals/actions/workflows/lint.yml/badge.svg)](https://github.com/YertleTurtleGit/depth-from-normals/actions/workflows/lint.yml)
 <a target="_blank" href="https://colab.research.google.com/github/YertleTurtleGit/depth-from-normals">
@@ -65,7 +49,7 @@ plt.imshow(NORMAL_MAP_A_IMAGE)
 
 
 
-    <matplotlib.image.AxesImage at 0x7f73693ddd90>
+    <matplotlib.image.AxesImage at 0x7ff29cfda160>
 
 
 
@@ -83,7 +67,7 @@ plt.imshow(NORMAL_MAP_B_IMAGE)
 
 
 
-    <matplotlib.image.AxesImage at 0x7f73693209a0>
+    <matplotlib.image.AxesImage at 0x7ff29cf0da00>
 
 
 
@@ -148,7 +132,7 @@ axis_array[1].imshow(gradient_map_image[:, :, 1])
 
 
 
-    <matplotlib.image.AxesImage at 0x7f7369237730>
+    <matplotlib.image.AxesImage at 0x7ff29ce24610>
 
 
 
@@ -203,7 +187,7 @@ plt.imshow(rotate(NORMAL_MAP_A_IMAGE, 20))
 
 
 
-    <matplotlib.image.AxesImage at 0x7f73691d94f0>
+    <matplotlib.image.AxesImage at 0x7ff29cdc6490>
 
 
 
@@ -368,12 +352,41 @@ plt.imshow(depth_map_image)
 
 
 
-    <matplotlib.image.AxesImage at 0x7f73690540a0>
+    <matplotlib.image.AxesImage at 0x7ff29cc3f130>
 
 
 
 
     
 ![png](README_files/README_23_1.png)
+    
+
+
+
+```python
+x_list = []
+y_list = []
+z_list = []
+
+for x in range(depth_map_image.shape[1]):
+    for y in range(depth_map_image.shape[0]):
+        z = depth_map_image[y, x]
+        x_list.append(x)
+        y_list.append(y)
+        z_list.append(z)
+```
+
+
+```python
+fig = plt.figure(figsize=(12, 7))
+ax = fig.add_subplot(projection="3d")
+img = ax.scatter(x_list, y_list, z_list, c=z_list)
+fig.colorbar(img)
+plt.show()
+```
+
+
+    
+![png](README_files/README_25_0.png)
     
 
