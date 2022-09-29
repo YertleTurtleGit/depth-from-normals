@@ -1,18 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**
-
-- [Introduction](#introduction)
-- [Source code](#source-code)
-  - [Imports](#imports)
-  - [Input & Settings](#input--settings)
-  - [Sub-methods](#sub-methods)
-    - [Gradient Map](#gradient-map)
-    - [Rotation](#rotation)
-  - [Example usage](#example-usage)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 [![Map Pipeline](https://github.com/YertleTurtleGit/depth-from-normals/actions/workflows/map_pipeline.yml/badge.svg)](https://github.com/YertleTurtleGit/depth-from-normals/actions/workflows/map_pipeline.yml)
 [![Lint](https://github.com/YertleTurtleGit/depth-from-normals/actions/workflows/lint.yml/badge.svg)](https://github.com/YertleTurtleGit/depth-from-normals/actions/workflows/lint.yml)
 <a target="_blank" href="https://colab.research.google.com/github/YertleTurtleGit/depth-from-normals">
@@ -53,10 +38,6 @@ NORMAL_MAP_A_PATH: str = "https://raw.githubusercontent.com/YertleTurtleGit/dept
 NORMAL_MAP_B_PATH: str = "https://raw.githubusercontent.com/YertleTurtleGit/depth-from-normals/main/normal_mapping_b.png"
 NORMAL_MAP_A_IMAGE: np.ndarray = io.imread(NORMAL_MAP_A_PATH)
 NORMAL_MAP_B_IMAGE: np.ndarray = io.imread(NORMAL_MAP_B_PATH)
-
-NORMAL_MAP_IS_OPEN_GL: bool = True  # @param {type: "boolean"}
-TARGET_ITERATION_COUNT: int = 1000  # @param {type: "integer"}
-MAX_THREAD_COUNT: int = 4  # @param {type: "integer"}
 ```
 
 
@@ -68,7 +49,7 @@ plt.imshow(NORMAL_MAP_A_IMAGE)
 
 
 
-    <matplotlib.image.AxesImage at 0x7f1a2deb9e80>
+    <matplotlib.image.AxesImage at 0x7f73693ddd90>
 
 
 
@@ -80,14 +61,13 @@ plt.imshow(NORMAL_MAP_A_IMAGE)
 
 
 ```python
-# Source: learnopengl.com
 plt.imshow(NORMAL_MAP_B_IMAGE)
 ```
 
 
 
 
-    <matplotlib.image.AxesImage at 0x7f1a2ddfa850>
+    <matplotlib.image.AxesImage at 0x7f73693209a0>
 
 
 
@@ -102,6 +82,24 @@ plt.imshow(NORMAL_MAP_B_IMAGE)
 
 ### Gradient Map
 
+The gradient maps are the basis for the integration over the normal map.
+
+Given the normal vector $\vec{n} \in \mathbb{R}^{3}$ and a rotation value $r \in \mathbb{R}[0,2\pi]$, the gradient of a single pixel and a single rotation $g(r)$ is calculated:
+
+$$
+g_x = -\cos{\vec{n}_x} \sin{\vec{n}_x}
+$$
+
+$$
+g_y = \cos{\vec{n}_y} \sin{\vec{n}_y}
+$$
+
+$$
+g(r) = g_x \cos{r} + g_y \sin{r}
+$$
+
+This will be calculated for every pixel and for every rotation value.
+
 
 ```python
 def calculate_gradient_map(
@@ -113,7 +111,7 @@ def calculate_gradient_map(
     if not normal_map_is_open_gl:
         normal_map[:, :, 1] *= -1  # Invert green/y channel if not OpenGL.
 
-    gradient_map = np.empty((width, height, 2), dtype=np.float64)
+    gradient_map = np.empty((width, height, 2))
     gradient_map[:, :, 0] = -normal_map[:, :, 0] / normal_map[:, :, 2]
     gradient_map[:, :, 1] = normal_map[:, :, 1] / normal_map[:, :, 2]
     return gradient_map
@@ -134,13 +132,13 @@ axis_array[1].imshow(gradient_map_image[:, :, 1])
 
 
 
-    <matplotlib.image.AxesImage at 0x7f1a2dd10760>
+    <matplotlib.image.AxesImage at 0x7f7369237730>
 
 
 
 
     
-![png](README_files/README_12_1.png)
+![png](README_files/README_13_1.png)
     
 
 
@@ -189,30 +187,47 @@ plt.imshow(rotate(NORMAL_MAP_A_IMAGE, 20))
 
 
 
-    <matplotlib.image.AxesImage at 0x7f1a2dcb7520>
+    <matplotlib.image.AxesImage at 0x7f73691d94f0>
 
 
 
 
     
-![png](README_files/README_14_1.png)
+![png](README_files/README_15_1.png)
     
 
+
+## Height Mapping
+
+The height values $h(x,y) \in \mathbb{R}^{2}, \ \ x,y \in \mathbb{N}^{0}$ can be calculated by a simple anisotropic cumulative sum over the gradients which converges to an integral over $g(x,y)$:
+
+$$
+h(x_t,y_t) = \int\int g(x,y) dydx \ \ (x_t,y_t) \approx \sum_{x_i=0}^{x_t} g(x_i,y_t)
+$$
+
+This alone is very prone for errors. That’s why the rotation is introduced. When re-calculating the gradient map multiple times with a rotation factor and using that to calculate the height values for every re-calculated gradient map, adding this values together drastically improves the resulting height values:
+
+$$
+h(x_t,y_t) = \sum_{r=0}^{2\pi} \sum_{x_i=0}^{x_t} g(r)(x_i,y_t)
+$$
+
+
+(In the following example, instead of a cumulative sum, a cumulative trapezoid is used. Both result in similar height values in most cases.)
 
 
 ```python
-def estimate_depth_map(
+def estimate_height_map(
     normal_map: np.ndarray,
     normal_map_is_open_gl: bool = True,
     target_iteration_count: int = 1000,
-    max_thread_count: int = 1,
+    max_thread_count: int = 4,
 ) -> np.ndarray:
     """Estimates a depth mapping from a given normal mapping.
 
     Parameters
     ----------
-    normal_map_path : str
-        The URI or simple file path to the normal mapping.
+    normal_map : np.ndarray
+        The normal mapping as numpy array.
     normal_map_is_open_gl : bool, optional
         Set to `False` if the normal map is in DirectX format with flipped green/y channel, by default `True`.
     target_iteration_count : int, optional
@@ -289,10 +304,13 @@ def estimate_depth_map(
     depth_map -= np.min(depth_map)
     depth_map /= np.max(depth_map)
 
-    depth_map *= 255  # Transform from [0, 1] to [0, 255].
+    depth_map *= 2**8 - 1  # Transform from [0, 1] to [0, 255].
+    depth_map = np.clip(depth_map, 0, 255)
 
-    return depth_map
+    return depth_map.astype(np.uint8)
 ```
+
+In the following example, you can see the effect of the gradient rotation on the height map quality.
 
 
 ```python
@@ -300,22 +318,19 @@ figure, axis_array = plt.subplots(1, 3)
 figure.set_size_inches((12, 5))
 
 for index in range(3):
-    iteration_count = max(index * 100, 1)
+    iteration_count = max(index * 50, 1)
     axis_array[index].set_title(f"iteration count: {iteration_count}")
 
-    depth_map_image: np.ndarray = estimate_depth_map(
-        NORMAL_MAP_B_IMAGE,
-        normal_map_is_open_gl=NORMAL_MAP_IS_OPEN_GL,
-        target_iteration_count=iteration_count,
-        max_thread_count=MAX_THREAD_COUNT,
+    depth_map_image: np.ndarray = estimate_height_map(
+        NORMAL_MAP_B_IMAGE, target_iteration_count=iteration_count
     )
 
-    axis_array[index].imshow(depth_map_image, cmap="gray")
+    axis_array[index].imshow(depth_map_image)
 ```
 
 
     
-![png](README_files/README_16_0.png)
+![png](README_files/README_21_0.png)
     
 
 
@@ -324,25 +339,25 @@ for index in range(3):
 
 
 ```python
-depth_map_image: np.ndarray = estimate_depth_map(
+depth_map_image: np.ndarray = estimate_height_map(
     NORMAL_MAP_A_IMAGE,
-    normal_map_is_open_gl=NORMAL_MAP_IS_OPEN_GL,
-    target_iteration_count=TARGET_ITERATION_COUNT,
-    max_thread_count=MAX_THREAD_COUNT,
+    normal_map_is_open_gl=True,
+    target_iteration_count=100,
+    max_thread_count=4,
 )
 
-plt.imshow(depth_map_image, cmap="gray")
+plt.imshow(depth_map_image)
 ```
 
 
 
 
-    <matplotlib.image.AxesImage at 0x7f1a2db2f220>
+    <matplotlib.image.AxesImage at 0x7f73690540a0>
 
 
 
 
     
-![png](README_files/README_18_1.png)
+![png](README_files/README_23_1.png)
     
 
