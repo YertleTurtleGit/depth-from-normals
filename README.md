@@ -5,18 +5,6 @@
 </a>
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**
-
-- [Introduction](#introduction)
-- [Imports & Inputs](#imports--inputs)
-- [Explanation](#explanation)
-  - [Gradients](#gradients)
-  - [Heights](#heights)
-  - [Rotation](#rotation)
-- [Optimization](#optimization)
-- [Example Usage](#example-usage)
-
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Introduction
@@ -368,12 +356,20 @@ def integrate_vector_field(vector_field, target_iteration_count):
     return isotropic_height
 
 
+def estimate_height_map(
+    normal_map: np.ndarray, target_iteration_count: int = 250
+) -> np.ndarray:
+    normals = ((normal_map[:, :, :3] / 255) - 0.5) * 2
+    heights = integrate_vector_field(normals, target_iteration_count)
+    return heights
+
+
 figure, axes = plt.subplots(1, 4, figsize=(14, 6))
-normals = ((NORMAL_MAP_B_IMAGE[:, :, :3] / 255) - 0.5) * 2
+
 
 for index in range(4):
     target_iteration_count = max(1, index * 5)
-    heights = integrate_vector_field(normals, target_iteration_count)
+    heights = estimate_height_map(NORMAL_MAP_B_IMAGE, target_iteration_count)
     x, y = np.meshgrid(range(heights.shape[0]), range(heights.shape[1]))
 
     axes[index].set_title(f"target iteration count: {target_iteration_count}")
@@ -386,6 +382,26 @@ for index in range(4):
     
 
 
-# Optimization
-
 # Example Usage
+
+
+```python
+heights = estimate_height_map(NORMAL_MAP_A_IMAGE)
+
+_ = plt.imshow(heights)
+x, y = np.meshgrid(range(heights.shape[1]), range(heights.shape[0]))
+_, axes = plt.subplots(1, 1, subplot_kw={"projection": "3d"})
+_ = axes.scatter(x, y, heights, c=heights)
+```
+
+
+    
+![png](README_files/README_18_0.png)
+    
+
+
+
+    
+![png](README_files/README_18_1.png)
+    
+
