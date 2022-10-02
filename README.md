@@ -1,24 +1,11 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**
-
-- [Introduction](#introduction)
-- [Source code](#source-code)
-  - [Imports](#imports)
-  - [Input](#input)
-- [Explanation](#explanation)
-  - [Height Mapping](#height-mapping)
-  - [Optimization](#optimization)
-  - [Example Usage](#example-usage)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 [![Map Pipeline](https://github.com/YertleTurtleGit/depth-from-normals/actions/workflows/map_pipeline.yml/badge.svg)](https://github.com/YertleTurtleGit/depth-from-normals/actions/workflows/map_pipeline.yml)
 [![Lint](https://github.com/YertleTurtleGit/depth-from-normals/actions/workflows/lint.yml/badge.svg)](https://github.com/YertleTurtleGit/depth-from-normals/actions/workflows/lint.yml)
 <a target="_blank" href="https://colab.research.google.com/github/YertleTurtleGit/depth-from-normals">
 <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Introduction
 
@@ -26,11 +13,7 @@
 This algorithm estimates a 3d integral with the normal mapping with surface integrals of vector fields. First the directional gradients of the normals in x- and y-direction are calculated. They are then used to calculate the integrated values by a cumulative sum (Riemann sum). This process is repeated with differently rotated versions of the gradient mapping to average the values and reduce errors as a cumulative sum alone is very prone for subsequent errors.
 
 
-# Source code
-
-
-## Imports
-
+# Imports & Inputs
 
 
 ```python
@@ -45,9 +28,6 @@ from matplotlib import pyplot as plt
 from matplotlib.colors import TwoSlopeNorm
 ```
 
-## Input
-
-
 
 ```python
 NORMAL_MAP_A_PATH: str = "https://raw.githubusercontent.com/YertleTurtleGit/depth-from-normals/main/normal_mapping_a.png"  # @param {type: "string"}
@@ -58,6 +38,8 @@ NORMAL_MAP_B_IMAGE: np.ndarray = io.imread(NORMAL_MAP_B_PATH)
 
 # Explanation
 
+
+## Gradients
 
 First we calculate the anisotropic (directional) gradients from our normal map.
 
@@ -106,11 +88,11 @@ _ = axes[2].imshow(np.clip(normals, 0, 255))
 
 
     
-![png](README_files/README_10_0.png)
+![png](README_files/README_8_0.png)
     
 
 
-## Height Mapping
+## Heights
 
 The height values $h(x,y) \in \mathbb{R}^{2}, \ \ x,y \in \mathbb{N}^{0}$ can be calculated by a anisotropic cumulative sum over the gradients which converges to an integral over $g(x,y)$:
 
@@ -207,15 +189,17 @@ visualize_heights(left_heights, top_heights, isotropic_heights)
 
 
     
-![png](README_files/README_12_0.png)
+![png](README_files/README_10_0.png)
     
 
 
 
     
-![png](README_files/README_12_1.png)
+![png](README_files/README_10_1.png)
     
 
+
+## Rotation
 
 This alone is very prone for errors. That’s why rotation is introduced. When re-calculating the gradient map multiple times with a rotation factor and using that to calculate the height values for every re-calculated gradient map, adding this values together drastically improves the resulting height values:
 
@@ -234,7 +218,7 @@ _ = plt.yticks([1])
 
 
     
-![png](README_files/README_14_0.png)
+![png](README_files/README_12_0.png)
     
 
 
@@ -325,7 +309,7 @@ _ = axes[2].imshow(rotated_normal_map)
 
 
     
-![png](README_files/README_16_0.png)
+![png](README_files/README_14_0.png)
     
 
 
@@ -386,10 +370,10 @@ for index in range(4):
 
 
     
-![png](README_files/README_18_0.png)
+![png](README_files/README_16_0.png)
     
 
 
-## Optimization
+# Optimization
 
-## Example Usage
+# Example Usage
