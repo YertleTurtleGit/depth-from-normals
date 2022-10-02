@@ -5,17 +5,6 @@
 </a>
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**
-
-- [Introduction](#introduction)
-- [Imports & Inputs](#imports--inputs)
-- [Explanation](#explanation)
-  - [Gradients](#gradients)
-  - [Heights](#heights)
-  - [Rotation](#rotation)
-- [Example Usage](#example-usage)
-
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Introduction
@@ -105,7 +94,7 @@ _ = axes[2].imshow(np.clip(normals, 0, 255))
 
 ## Heights
 
-The height values $h(x,y) \in \mathbb{R}^{2}, \ \ x,y \in \mathbb{N}^{0}$ can be calculated by a anisotropic cumulative sum over the gradients which converges to an integral over $g(x,y)$:
+The height values $h(x,y) \in \mathbb{R}^{2}, \ \ x,y \in \mathbb{N}^{0}$ can be calculated by a cumulative sum over the gradients which converges to an integral over $g(x,y)$:
 
 $$
 h(x_t,y_t) = \iint g(x,y) dydx \ \ (x_t,y_t) \approx \sum_{x_i=0}^{x_t} g(x_i,y_t)
@@ -117,10 +106,10 @@ The isotropic (non-directional) heights are determined with a combination of all
 
 ```python
 def integrate_gradient_field(gradient_field, axis):
-    integral = np.zeros(gradient_field.shape[:2])
-
     return np.cumsum(gradient_field, axis=axis)
     # return cumulative_trapezoid(gradient_field, axis=axis)
+    integral = np.zeros(gradient_field.shape[:2])
+
     if axis == 1:
         for y in range(gradient_field.shape[0]):
             for x in range(1, gradient_field.shape[1]):
@@ -396,7 +385,7 @@ for index in range(4):
 
 
 ```python
-heights = estimate_height_map(NORMAL_MAP_A_IMAGE)
+heights = estimate_height_map(NORMAL_MAP_B_IMAGE)
 
 _ = plt.imshow(heights)
 x, y = np.meshgrid(range(heights.shape[1]), range(heights.shape[0]))
@@ -415,3 +404,73 @@ _ = axes.scatter(x, y, heights, c=heights)
 ![png](README_files/README_18_1.png)
     
 
+
+# Discussion
+
+## Integration
+
+Cumulative sum is a a very primitive way of calculating an integral. In the following the trapezoid and the Simpson method are implemented additionally.
+
+
+```python
+from enum import auto, Enum
+
+
+class INTEGRATION_METHODS(Enum):
+    SUM = auto()
+    TRAPEZOID = auto()
+    SIMSPSON = auto()
+
+
+def integrate_gradient_field(gradient_field, axis):
+    if INTEGRATION_METHOD == INTEGRATION_METHOD.SUM:
+        return np.cumsum(gradient_field, axis=axis)
+
+    if INTEGRATION_METHOD == INTEGRATION_METHOD.TRAPEZOID:
+        return cumulative_trapezoid(gradient_field, axis=axis, initial=0)
+
+    if INTEGRATION_METHOD == INTEGRATION_METHOD.SIMSPSON:
+        integral = np.zeros(gradient_field.shape[:2])
+
+        if axis == 1:
+            for y in range(gradient_field.shape[0]):
+                for x in range(1, gradient_field.shape[1]):
+                    integral[y, x] = simpson(gradient_field[y, :x])
+
+        elif axis == 0:
+            for x in range(gradient_field.shape[1]):
+                for y in range(1, gradient_field.shape[0]):
+                    integral[y, x] = simpson(gradient_field[:y, x])
+
+        return integral
+
+
+figure, axes = plt.subplots(1, 3, figsize=(14, 6))
+
+target_iteration_count = 1
+
+INTEGRATION_METHOD = INTEGRATION_METHODS.SUM
+sum_heights = estimate_height_map(NORMAL_MAP_B_IMAGE, target_iteration_count)
+axes[0].set_title(f"sum")
+_ = axes[0].imshow(sum_heights)
+
+INTEGRATION_METHOD = INTEGRATION_METHODS.TRAPEZOID
+trapezoid_heights = estimate_height_map(NORMAL_MAP_B_IMAGE, target_iteration_count)
+axes[1].set_title(f"trapezoid")
+_ = axes[1].imshow(trapezoid_heights)
+
+INTEGRATION_METHOD = INTEGRATION_METHODS.SIMSPSON
+simpson_heights = estimate_height_map(NORMAL_MAP_B_IMAGE, target_iteration_count)
+axes[2].set_title(f"simpson")
+_ = axes[2].imshow(simpson_heights)
+```
+
+
+    
+![png](README_files/README_20_0.png)
+    
+
+
+They all look quite the same and in fact, they are pretty much equal. However, the Simpson approach takes a very long computational time in this implementation, compared to sum and trapezoid.
+
+This is quite demotivating in regard of using polynomial approximation in general to improve the resulting heights.
