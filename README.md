@@ -5,18 +5,6 @@
 </a>
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**
-
-- [Introduction](#introduction)
-- [Imports & Inputs](#imports--inputs)
-- [Explanation](#explanation)
-  - [Gradients](#gradients)
-  - [Heights](#heights)
-  - [Rotation](#rotation)
-- [Optimization](#optimization)
-- [Example Usage](#example-usage)
-
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Introduction
@@ -58,11 +46,11 @@ First we calculate the anisotropic (directional) gradients from our normal map.
 Given the normal vector $\vec{n} \in \mathbb{R}^{3}$ and a rotation value $r \in \mathbb{R}[0,2\pi]$, the anisotropic gradients are calculated:
 
 $$
-a_h = \arccos{\vec{n}_x}, \hspace{5px} g_{left} = (1 - \sin{a_h}) * sgn(a_h - \frac{\pi}{2})
+a_h = \arccos{\vec{n_x}}, \hspace{5px} g_l = (1 - \sin{a_h}) * sgn(a_h - \frac{\pi}{2})
 $$
 
 $$
-a_v = \arccos{\vec{n}_y}, \hspace{5px} g_{top} = (1 - \sin{a_v}) * sgn(a_v - \frac{\pi}{2})
+a_v = \arccos{\vec{n_y}}, \hspace{5px} g_t = (1 - \sin{a_v}) * sgn(a_v - \frac{\pi}{2})
 $$
 
 This will be calculated for every pixel and for every rotation value.
