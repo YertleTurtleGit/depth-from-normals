@@ -5,6 +5,17 @@
 </a>
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**
+
+- [Introduction](#introduction)
+- [Imports & Inputs](#imports--inputs)
+- [Explanation](#explanation)
+  - [Gradients](#gradients)
+  - [Heights](#heights)
+  - [Rotation](#rotation)
+- [Example Usage](#example-usage)
+
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Introduction
