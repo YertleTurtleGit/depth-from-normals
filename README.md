@@ -5,19 +5,6 @@
 </a>
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**
-
-- [Introduction](#introduction)
-- [Imports & Inputs](#imports--inputs)
-- [Explanation](#explanation)
-  - [Gradients](#gradients)
-  - [Heights](#heights)
-  - [Rotation](#rotation)
-- [Example Usage](#example-usage)
-- [Discussion](#discussion)
-  - [Integration](#integration)
-
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Introduction
@@ -120,20 +107,6 @@ The isotropic (non-directional) heights are determined with a combination of all
 ```python
 def integrate_gradient_field(gradient_field, axis):
     return np.cumsum(gradient_field, axis=axis)
-    # return cumulative_trapezoid(gradient_field, axis=axis)
-    integral = np.zeros(gradient_field.shape[:2])
-
-    if axis == 1:
-        for y in range(gradient_field.shape[0]):
-            for x in range(1, gradient_field.shape[1]):
-                integral[y, x] = simpson(gradient_field[y, :x])
-
-    elif axis == 0:
-        for y in range(1, gradient_field.shape[0]):
-            for x in range(gradient_field.shape[1]):
-                integral[y, x] = simpson(gradient_field[y - 1 : y + 1, x])
-
-    return integral
 
 
 def calculate_heights(left_gradients, top_gradients):
@@ -154,19 +127,6 @@ left_heights, right_heights, top_heights, bottom_heights = calculate_heights(
 
 
 def combine_heights(*heights):
-    std = np.std(heights, axis=0)
-    mean = np.mean(heights, axis=0)
-    median = np.median(heights, axis=0)
-    return mean
-
-    outlier_mask = None
-
-    for height in heights:
-        outlier_mask = np.abs(height - mean) < std * 1.1
-        height[outlier_mask] = mean[outlier_mask] - height[outlier_mask] * (
-            len(heights) / len(heights) - 1
-        )
-
     return np.mean(heights, axis=0)
 
 
@@ -175,29 +135,39 @@ isotropic_heights = combine_heights(
 )
 
 
-def visualize_heights(left_heights, top_heights, isotropic_heights):
-    figure, axes = plt.subplots(1, 5, figsize=(19, 5))
-    axes[0].set_title("anisotropic left heights")
-    _ = axes[0].imshow(left_heights, norm=TwoSlopeNorm(0.5))
-    axes[1].set_title("anisotropic right heights")
-    _ = axes[1].imshow(right_heights, norm=TwoSlopeNorm(0.5))
-    axes[2].set_title("anisotropic top heights")
-    _ = axes[2].imshow(top_heights, norm=TwoSlopeNorm(0.5))
-    axes[3].set_title("anisotropic bottom heights")
-    _ = axes[3].imshow(bottom_heights, norm=TwoSlopeNorm(0.5))
-    axes[4].set_title("isotropic heights")
-    _ = axes[4].imshow(isotropic_heights, norm=TwoSlopeNorm(0.5))
+def visualize_heights(heights_list, labels):
+    if len(heights_list) == 1:
+        heights = heights_list[0]
+        plt.title(labels[0])
+        _ = plt.imshow(heights)
+        x, y = np.meshgrid(range(heights.shape[1]), range(heights.shape[0]))
+        _, axes = plt.subplots(1, 1, subplot_kw={"projection": "3d"})
+        _ = axes.scatter(x, y, heights, c=heights)
+        return
+
+    figure, axes = plt.subplots(1, len(heights_list), figsize=(19, 5))
+    for index, heights in enumerate(heights_list):
+        axes[index].set_title(labels[index])
+        _ = axes[index].imshow(heights, norm=TwoSlopeNorm(0.5))
 
     x, y = np.meshgrid(range(left_heights.shape[0]), range(left_heights.shape[1]))
-    figure, axes = plt.subplots(1, 5, subplot_kw={"projection": "3d"}, figsize=(19, 5))
-    _ = axes[0].scatter(x, y, left_heights, c=left_heights)
-    _ = axes[1].scatter(x, y, right_heights, c=right_heights)
-    _ = axes[2].scatter(x, y, top_heights, c=top_heights)
-    _ = axes[3].scatter(x, y, bottom_heights, c=bottom_heights)
-    _ = axes[4].scatter(x, y, isotropic_heights, c=isotropic_heights)
+    figure, axes = plt.subplots(
+        1, len(heights_list), subplot_kw={"projection": "3d"}, figsize=(19, 5)
+    )
+    for index, heights in enumerate(heights_list):
+        _ = axes[index].scatter(x, y, heights, c=heights)
 
 
-visualize_heights(left_heights, top_heights, isotropic_heights)
+visualize_heights(
+    [left_heights, right_heights, top_heights, bottom_heights, isotropic_heights],
+    [
+        "anisotropic left heights",
+        "anisotropic right heights",
+        "anisotropic top heights",
+        "anisotropic bottom heights",
+        "isotropic heights",
+    ],
+)
 ```
 
 
@@ -398,7 +368,7 @@ for index in range(4):
 
 
 ```python
-heights = estimate_height_map(NORMAL_MAP_B_IMAGE)
+heights = estimate_height_map(NORMAL_MAP_A_IMAGE)
 
 _ = plt.imshow(heights)
 x, y = np.meshgrid(range(heights.shape[1]), range(heights.shape[0]))
@@ -458,24 +428,21 @@ def integrate_gradient_field(gradient_field, axis):
         return integral
 
 
-figure, axes = plt.subplots(1, 3, figsize=(14, 6))
-
 target_iteration_count = 1
 
-INTEGRATION_METHOD = INTEGRATION_METHODS.SUM
-sum_heights = estimate_height_map(NORMAL_MAP_B_IMAGE, target_iteration_count)
-axes[0].set_title(f"sum")
-_ = axes[0].imshow(sum_heights)
 
 INTEGRATION_METHOD = INTEGRATION_METHODS.TRAPEZOID
-trapezoid_heights = estimate_height_map(NORMAL_MAP_B_IMAGE, target_iteration_count)
-axes[1].set_title(f"trapezoid")
-_ = axes[1].imshow(trapezoid_heights)
+trapezoid_heights = estimate_height_map(NORMAL_MAP_A_IMAGE, target_iteration_count)
 
 INTEGRATION_METHOD = INTEGRATION_METHODS.SIMSPSON
-simpson_heights = estimate_height_map(NORMAL_MAP_B_IMAGE, target_iteration_count)
-axes[2].set_title(f"simpson")
-_ = axes[2].imshow(simpson_heights)
+simpson_heights = estimate_height_map(NORMAL_MAP_A_IMAGE, target_iteration_count)
+
+INTEGRATION_METHOD = INTEGRATION_METHODS.SUM
+sum_heights = estimate_height_map(NORMAL_MAP_A_IMAGE, target_iteration_count)
+
+visualize_heights(
+    [sum_heights, trapezoid_heights, simpson_heights], ["sum", "trapezoid", "Simpson"]
+)
 ```
 
 
@@ -484,6 +451,35 @@ _ = axes[2].imshow(simpson_heights)
     
 
 
+
+    
+![png](README_files/README_20_1.png)
+    
+
+
 They all look quite the same and in fact, they are pretty much equal. However, the Simpson approach takes a very long computational time in this implementation, compared to sum and trapezoid.
 
 This is quite demotivating in regard of using polynomial approximation in general to improve the resulting heights.
+
+## Confidence
+
+A simple approach to calculate the confidence of a pixel is to override the heights combination function to return the negative standard deviation instead of the mean.
+
+
+```python
+def combine_heights(*heights):
+    return -np.std(heights, axis=0)
+
+
+confidences = estimate_height_map(NORMAL_MAP_A_IMAGE)
+plt.title("confidences")
+plt.xlabel(f"mean: {np.mean(confidences)}")
+_ = plt.imshow(confidences)
+_ = plt.colorbar()
+```
+
+
+    
+![png](README_files/README_23_0.png)
+    
+
