@@ -5,20 +5,6 @@
 </a>
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**
-
-- [Introduction](#introduction)
-- [Imports & Inputs](#imports--inputs)
-- [Explanation](#explanation)
-  - [Gradients](#gradients)
-  - [Heights](#heights)
-  - [Rotation](#rotation)
-- [Example Usage](#example-usage)
-- [Discussion](#discussion)
-  - [Integration](#integration)
-  - [Confidence](#confidence)
-
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Introduction
@@ -31,14 +17,15 @@ This algorithm estimates a 3d integral with the normal mapping with surface inte
 
 
 ```python
-import numpy as np
-import cv2 as cv
-from scipy.integrate import cumulative_trapezoid, simpson
-from skimage import io
-from math import sin, cos, radians, pi
-from typing import List, Tuple
-from matplotlib import pyplot as plt
-from matplotlib.colors import TwoSlopeNorm
+import numpy as np  # vector matrix calculations
+import cv2 as cv  # image manipulation
+from scipy.integrate import cumulative_trapezoid, simpson  # normal map integration
+from multiprocessing.pool import ThreadPool as Pool  # optimization for shorter runtime
+from skimage import io  # image reading from url
+from math import sin, cos, radians, pi  # basic angle math
+from typing import List, Tuple  # python typing
+from matplotlib import pyplot as plt  # visualization
+from matplotlib.colors import TwoSlopeNorm  # visualization
 ```
 
 
@@ -71,7 +58,7 @@ This will be calculated for every pixel and for every rotation value.
 
 
 ```python
-def calculate_gradients(normals):
+def calculate_gradients(normals: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     horizontal_angle_map = np.arccos(np.clip(normals[:, :, 0], -1, 1))
     left_gradients = (1 - np.sin(horizontal_angle_map)) * np.sign(
         horizontal_angle_map - pi / 2
@@ -118,11 +105,13 @@ The isotropic (non-directional) heights are determined with a combination of all
 
 
 ```python
-def integrate_gradient_field(gradient_field, axis):
+def integrate_gradient_field(gradient_field: np.ndarray, axis: int) -> np.ndarray:
     return np.cumsum(gradient_field, axis=axis)
 
 
-def calculate_heights(left_gradients, top_gradients):
+def calculate_heights(
+    left_gradients: np.ndarray, top_gradients: np.ndarray
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     left_heights = integrate_gradient_field(left_gradients, axis=1)
     right_heights = np.fliplr(
         integrate_gradient_field(np.fliplr(-left_gradients), axis=1)
@@ -139,7 +128,7 @@ left_heights, right_heights, top_heights, bottom_heights = calculate_heights(
 )
 
 
-def combine_heights(*heights):
+def combine_heights(*heights: np.ndarray) -> np.ndarray:
     return np.mean(heights, axis=0)
 
 
@@ -148,7 +137,7 @@ isotropic_heights = combine_heights(
 )
 
 
-def visualize_heights(heights_list, labels):
+def visualize_heights(heights_list: List[np.ndarray], labels: List[str]):
     if len(heights_list) == 1:
         heights = heights_list[0]
         plt.title(labels[0])
@@ -226,7 +215,7 @@ If we want to for example calculate a 225° anisotropic height map, we need to r
 ANGLE = 225
 
 
-def rotate(matrix, angle):
+def rotate(matrix: np.ndarray, angle: float) -> np.ndarray:
     image_size = (matrix.shape[1], matrix.shape[0])
     image_center = tuple(np.array(image_size) / 2)
 
@@ -326,9 +315,9 @@ def centered_crop(image: np.ndarray, target_resolution: Tuple[int, int]) -> np.n
 
 
 ```python
-def integrate_vector_field(vector_field, target_iteration_count):
-    from multiprocessing.pool import ThreadPool as Pool
-
+def integrate_vector_field(
+    vector_field: np.ndarray, target_iteration_count: int
+) -> np.ndarray:
     shape = vector_field.shape[:2]
     angles = np.linspace(0, 90, target_iteration_count, endpoint=False)
     thread_count = 4
@@ -441,7 +430,7 @@ class INTEGRATION_METHODS(Enum):
     SIMSPSON = auto()
 
 
-def integrate_gradient_field(gradient_field, axis):
+def integrate_gradient_field(gradient_field: np.ndarray, axis: int) -> np.ndarray:
     if INTEGRATION_METHOD == INTEGRATION_METHOD.SUM:
         return np.cumsum(gradient_field, axis=axis)
 
@@ -462,6 +451,10 @@ def integrate_gradient_field(gradient_field, axis):
                     integral[y, x] = simpson(gradient_field[:y, x])
 
         return integral
+
+    raise NotImplementedError(
+        f"Integration method '{INTEGRATION_METHOD}' not implemented."
+    )
 
 
 target_iteration_count = 1
@@ -503,7 +496,7 @@ A simple approach to calculate the confidence of a pixel is to override the heig
 
 
 ```python
-def combine_heights(*heights):
+def combine_heights(*heights: np.ndarray) -> np.ndarray:
     return -np.std(heights, axis=0)
 
 
