@@ -5,20 +5,6 @@
 </a>
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**
-
-- [Introduction](#introduction)
-- [Imports & Inputs](#imports--inputs)
-- [Explanation](#explanation)
-  - [Gradients](#gradients)
-  - [Heights](#heights)
-  - [Rotation](#rotation)
-- [Example Usage](#example-usage)
-- [Discussion](#discussion)
-  - [Integration](#integration)
-  - [Confidence](#confidence)
-
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Introduction
@@ -35,9 +21,8 @@ import numpy as np
 import cv2 as cv
 from scipy.integrate import cumulative_trapezoid, simpson
 from skimage import io
-from math import sin, cos, radians, degrees, pi, floor
-from threading import Thread, Lock
-from typing import List, Tuple, Union
+from math import sin, cos, radians, pi
+from typing import List, Tuple
 from matplotlib import pyplot as plt
 from matplotlib.colors import TwoSlopeNorm
 ```
@@ -328,27 +313,50 @@ def centered_crop(image: np.ndarray, target_resolution: Tuple[int, int]) -> np.n
 
 ```python
 def integrate_vector_field(vector_field, target_iteration_count):
-    isotropic_height = np.zeros(vector_field.shape[:2])
+    from multiprocessing.pool import ThreadPool as Pool
+
+    shape = vector_field.shape[:2]
     angles = np.linspace(0, 90, target_iteration_count, endpoint=False)
-    iterations = len(angles)
+    thread_count = 4
 
-    for index, angle in enumerate(angles):
-        rotated_vector_field = rotate_vector_field_normals(
-            rotate(vector_field, angle), angle
-        )
-        left_gradients, top_gradients = calculate_gradients(rotated_vector_field)
+    def integrate_vector_field_angles(angles: List[float]) -> np.ndarray:
+        all_combined_heights = np.zeros(shape)
 
-        left_heights, right_heights, top_heights, bottom_heights = calculate_heights(
-            left_gradients, top_gradients
-        )
-        combined_heights = combine_heights(
-            left_heights, right_heights, top_heights, bottom_heights
-        )
-        combined_heights = centered_crop(
-            rotate(combined_heights, -angle), isotropic_height.shape
-        )
+        for angle in angles:
+            rotated_vector_field = rotate_vector_field_normals(
+                rotate(vector_field, angle), angle
+            )
 
-        isotropic_height += combined_heights / iterations
+            left_gradients, top_gradients = calculate_gradients(rotated_vector_field)
+            (
+                left_heights,
+                right_heights,
+                top_heights,
+                bottom_heights,
+            ) = calculate_heights(left_gradients, top_gradients)
+
+            combined_heights = combine_heights(
+                left_heights, right_heights, top_heights, bottom_heights
+            )
+            combined_heights = centered_crop(rotate(combined_heights, -angle), shape)
+            all_combined_heights += combined_heights / len(angles)
+
+        return all_combined_heights
+
+    with Pool(processes=thread_count) as pool:
+        heights = pool.map(
+            integrate_vector_field_angles,
+            np.array(
+                np.array_split(angles, thread_count),
+                dtype=object,
+            ),
+        )
+        pool.close()
+        pool.join()
+
+    isotropic_height = np.zeros(shape)
+    for height in heights:
+        isotropic_height += height / thread_count
 
     return isotropic_height
 
