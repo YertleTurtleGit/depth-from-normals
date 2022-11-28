@@ -5,20 +5,6 @@
 </a>
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**
-
-- [Introduction](#introduction)
-- [Imports & Inputs](#imports--inputs)
-- [Explanation](#explanation)
-  - [Gradients](#gradients)
-  - [Heights](#heights)
-  - [Rotation](#rotation)
-- [Example Usage](#example-usage)
-- [Discussion](#discussion)
-  - [Integration](#integration)
-  - [Confidence](#confidence)
-
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Introduction
@@ -27,27 +13,55 @@
 This algorithm estimates a 3d integral with the normal mapping with surface integrals of vector fields. First the directional gradients of the normals in x- and y-direction are calculated. They are then used to calculate the integrated values by a cumulative sum (Riemann sum). This process is repeated with differently rotated versions of the gradient mapping to average the values and reduce errors as a cumulative sum alone is very prone for subsequent errors.
 
 
-# Imports & Inputs
+# Quickstart
 
 
 ```python
-import numpy as np  # vector matrix calculations
-import cv2 as cv  # image manipulation
-from scipy.integrate import cumulative_trapezoid, simpson  # normal map integration
-from multiprocessing.pool import ThreadPool as Pool  # optimization for shorter runtime
-from skimage import io  # image reading from url
-from math import sin, cos, radians, pi  # basic angle math
-from typing import List, Tuple  # python typing
-from matplotlib import pyplot as plt  # visualization
-from matplotlib.colors import TwoSlopeNorm  # visualization
-```
+from height_map import (
+    estimate_height_map,
+)  # local file 'height_map.py' in this repository
+from matplotlib import pyplot as plt
+import numpy as np
+from skimage import io
 
-
-```python
 NORMAL_MAP_A_PATH: str = "https://raw.githubusercontent.com/YertleTurtleGit/depth-from-normals/main/normal_mapping_a.png"  # @param {type: "string"}
 NORMAL_MAP_B_PATH: str = "https://raw.githubusercontent.com/YertleTurtleGit/depth-from-normals/main/normal_mapping_b.png"
 NORMAL_MAP_A_IMAGE: np.ndarray = io.imread(NORMAL_MAP_A_PATH)
 NORMAL_MAP_B_IMAGE: np.ndarray = io.imread(NORMAL_MAP_B_PATH)
+```
+
+
+```python
+heights = estimate_height_map(NORMAL_MAP_A_IMAGE, raw_values=True)
+_ = plt.imshow(heights)
+
+x, y = np.meshgrid(range(heights.shape[1]), range(heights.shape[0]))
+_, axes = plt.subplots(1, 1, subplot_kw={"projection": "3d"})
+_ = axes.scatter(x, y, heights, c=heights)
+```
+
+
+    
+![png](README_files/README_5_0.png)
+    
+
+
+
+    
+![png](README_files/README_5_1.png)
+    
+
+
+# Imports & Inputs
+
+
+```python
+import cv2 as cv
+from scipy.integrate import cumulative_trapezoid, simpson
+from multiprocessing.pool import ThreadPool as Pool
+from math import sin, cos, radians, pi
+from typing import List, Tuple
+from matplotlib.colors import TwoSlopeNorm
 ```
 
 # Explanation
@@ -102,7 +116,7 @@ _ = axes[2].imshow(np.clip(normals, 0, 255))
 
 
     
-![png](README_files/README_8_0.png)
+![png](README_files/README_10_0.png)
     
 
 
@@ -188,13 +202,13 @@ visualize_heights(
 
 
     
-![png](README_files/README_10_0.png)
+![png](README_files/README_12_0.png)
     
 
 
 
     
-![png](README_files/README_10_1.png)
+![png](README_files/README_12_1.png)
     
 
 
@@ -217,7 +231,7 @@ _ = plt.yticks([1])
 
 
     
-![png](README_files/README_12_0.png)
+![png](README_files/README_14_0.png)
     
 
 
@@ -308,7 +322,7 @@ _ = axes[2].imshow(rotated_normal_map)
 
 
     
-![png](README_files/README_14_0.png)
+![png](README_files/README_16_0.png)
     
 
 
@@ -399,31 +413,7 @@ for index in range(4):
 
 
     
-![png](README_files/README_16_0.png)
-    
-
-
-# Example Usage
-
-
-```python
-heights = estimate_height_map(NORMAL_MAP_A_IMAGE)
-
-_ = plt.imshow(heights)
-x, y = np.meshgrid(range(heights.shape[1]), range(heights.shape[0]))
-_, axes = plt.subplots(1, 1, subplot_kw={"projection": "3d"})
-_ = axes.scatter(x, y, heights, c=heights)
-```
-
-
-    
 ![png](README_files/README_18_0.png)
-    
-
-
-
-    
-![png](README_files/README_18_1.png)
     
 
 
