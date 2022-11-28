@@ -5,20 +5,6 @@
 </a>
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**
-
-- [Introduction](#introduction)
-- [Quickstart](#quickstart)
-- [Imports & Inputs](#imports--inputs)
-- [Explanation](#explanation)
-  - [Gradients](#gradients)
-  - [Heights](#heights)
-  - [Rotation](#rotation)
-- [Discussion](#discussion)
-  - [Integration](#integration)
-  - [Confidence](#confidence)
-
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Introduction
@@ -46,7 +32,15 @@ NORMAL_MAP_B_IMAGE: np.ndarray = io.imread(NORMAL_MAP_B_PATH)
 
 
 ```python
-_ = plt.imshow(NORMAL_MAP_A_IMAGE)
+heights = estimate_height_map(NORMAL_MAP_A_IMAGE, raw_values=True)
+
+figure, axes = plt.subplots(1, 2, figsize=(7, 3))
+_ = axes[0].imshow(NORMAL_MAP_A_IMAGE)
+_ = axes[1].imshow(heights)
+
+x, y = np.meshgrid(range(heights.shape[1]), range(heights.shape[0]))
+_, axes = plt.subplots(1, 1, subplot_kw={"projection": "3d"})
+_ = axes.scatter(x, y, heights, c=heights)
 ```
 
 
@@ -56,24 +50,8 @@ _ = plt.imshow(NORMAL_MAP_A_IMAGE)
 
 
 
-```python
-heights = estimate_height_map(NORMAL_MAP_A_IMAGE, raw_values=True)
-_ = plt.imshow(heights)
-
-x, y = np.meshgrid(range(heights.shape[1]), range(heights.shape[0]))
-_, axes = plt.subplots(1, 1, subplot_kw={"projection": "3d"})
-_ = axes.scatter(x, y, heights, c=heights)
-```
-
-
     
-![png](README_files/README_6_0.png)
-    
-
-
-
-    
-![png](README_files/README_6_1.png)
+![png](README_files/README_5_1.png)
     
 
 
@@ -141,7 +119,7 @@ _ = axes[2].imshow(np.clip(normals, 0, 255))
 
 
     
-![png](README_files/README_11_0.png)
+![png](README_files/README_10_0.png)
     
 
 
@@ -227,13 +205,13 @@ visualize_heights(
 
 
     
-![png](README_files/README_13_0.png)
+![png](README_files/README_12_0.png)
     
 
 
 
     
-![png](README_files/README_13_1.png)
+![png](README_files/README_12_1.png)
     
 
 
@@ -256,7 +234,7 @@ _ = plt.yticks([1])
 
 
     
-![png](README_files/README_15_0.png)
+![png](README_files/README_14_0.png)
     
 
 
@@ -347,7 +325,7 @@ _ = axes[2].imshow(rotated_normal_map)
 
 
     
-![png](README_files/README_17_0.png)
+![png](README_files/README_16_0.png)
     
 
 
@@ -438,7 +416,7 @@ for index in range(4):
 
 
     
-![png](README_files/README_19_0.png)
+![png](README_files/README_18_0.png)
     
 
 
@@ -505,13 +483,13 @@ visualize_heights(
 
 
     
-![png](README_files/README_21_0.png)
+![png](README_files/README_20_0.png)
     
 
 
 
     
-![png](README_files/README_21_1.png)
+![png](README_files/README_20_1.png)
     
 
 
@@ -538,6 +516,6 @@ _ = plt.colorbar()
 
 
     
-![png](README_files/README_24_0.png)
+![png](README_files/README_23_0.png)
     
 
