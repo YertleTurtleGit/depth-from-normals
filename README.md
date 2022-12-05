@@ -5,20 +5,6 @@
 </a>
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**
-
-- [Introduction](#introduction)
-- [Quickstart](#quickstart)
-- [Imports & Inputs](#imports--inputs)
-- [Explanation](#explanation)
-  - [Gradients](#gradients)
-  - [Heights](#heights)
-  - [Rotation](#rotation)
-- [Discussion](#discussion)
-  - [Integration](#integration)
-  - [Confidence](#confidence)
-
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Introduction
@@ -174,7 +160,7 @@ left_heights, right_heights, top_heights, bottom_heights = calculate_heights(
 
 
 def combine_heights(*heights: np.ndarray) -> np.ndarray:
-    return np.mean(heights, axis=0)
+    return np.mean(np.stack(heights, axis=0), axis=0)
 
 
 isotropic_heights = combine_heights(
@@ -518,7 +504,7 @@ A simple approach to calculate the confidence of a pixel is to override the heig
 
 ```python
 def combine_heights(*heights: np.ndarray) -> np.ndarray:
-    return -np.std(heights, axis=0)
+    return -np.std(np.stack(heights, axis=0), axis=0)
 
 
 confidences = estimate_height_map(NORMAL_MAP_A_IMAGE)
