@@ -5,27 +5,12 @@
 </a>
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**
-
-- [Introduction](#introduction)
-- [Quickstart](#quickstart)
-- [Imports & Inputs](#imports--inputs)
-- [Explanation](#explanation)
-  - [Gradients](#gradients)
-  - [Heights](#heights)
-  - [Rotation](#rotation)
-- [Discussion](#discussion)
-  - [Integration](#integration)
-  - [Confidence](#confidence)
-
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Introduction
 
 
-This algorithm estimates a 3d integral with the normal mapping with surface integrals of vector fields. First the directional gradients of the normals in x- and y-direction are calculated. They are then used to calculate the integrated values by a cumulative sum (Riemann sum). This process is repeated with differently rotated versions of the gradient mapping to average the values and reduce errors as a cumulative sum alone is very prone for subsequent errors.
-
+This algorithm estimates a 3D integral with the normal mapping with surface integrals of vector fields. First, the directional gradients of the normals in the x- and y-directions are calculated. They are then used to calculate the integrated values by a cumulative sum (Riemann sum). This process is repeated with differently rotated versions of the gradient mapping to average the values and reduce errors, as a cumulative sum alone is very prone to subsequent errors.
 
 # Quickstart
 
@@ -86,7 +71,7 @@ from matplotlib.colors import TwoSlopeNorm
 
 ## Gradients
 
-First we calculate the anisotropic (directional) gradients from our normal map.
+The gradients in the x- and y-directions are calculated from the normal mapping using the arccosine function and the sine function. This produces a mapping of angles that can be used to calculate the directional gradients.
 
 Given the normal vector $\vec{n} \in \mathbb{R}^{3}$ and a rotation value $r \in \mathbb{R}[0,2\pi]$, the anisotropic gradients are calculated:
 
@@ -97,8 +82,6 @@ $$
 $$
 a_v = \arccos{\vec{n_y}}, \hspace{5px} g_t = (1 - \sin{a_v}) * sgn(a_v - \frac{\pi}{2})
 $$
-
-This will be calculated for every pixel and for every rotation value.
 
 
 
@@ -231,7 +214,7 @@ visualize_heights(
 
 ## Rotation
 
-This alone is very prone for errors. That’s why rotation is introduced. When re-calculating the gradient map multiple times with a rotation factor and using that to calculate the height values for every re-calculated gradient map, adding this values together drastically improves the resulting height values:
+The use of the cumulative sum (Riemann sum) to calculate the height map is a simple and efficient method, but it is also susceptible to errors, especially when the gradient mapping has sharp changes in direction. To reduce these errors, the estimate_height_map function calculates the height map using multiple rotated versions of the gradient mapping and averages the results. This helps to smooth out the errors and improve the accuracy of the height map estimates.
 
 $$
 h(x_t,y_t) = \sum_{r=0}^{2\pi} \sum_{x_i=0}^{x_t} g R_\theta (x_i,y_t)
