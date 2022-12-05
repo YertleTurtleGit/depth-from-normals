@@ -57,7 +57,7 @@ def calculate_heights(
 
 
 def combine_heights(*heights: np.ndarray) -> np.ndarray:
-    return np.mean(heights, axis=0)
+    return np.mean(np.stack(heights, axis=0), axis=0)
 
 
 def rotate(matrix: np.ndarray, angle: float) -> np.ndarray:
