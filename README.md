@@ -5,20 +5,6 @@
 </a>
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**
-
-- [Introduction](#introduction)
-- [Quickstart](#quickstart)
-- [Imports & Inputs](#imports--inputs)
-- [Explanation](#explanation)
-  - [Gradients](#gradients)
-  - [Heights](#heights)
-  - [Rotation](#rotation)
-- [Discussion](#discussion)
-  - [Integration](#integration)
-  - [Confidence](#confidence)
-
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Introduction
@@ -70,6 +56,10 @@ _ = axes.scatter(x, y, heights, c=heights)
 
 # Imports & Inputs
 
+Just run the following in your CLI install all necessary packages on your mashine.
+
+```pip install -r requirements.txt```
+
 
 ```python
 import cv2 as cv
@@ -85,7 +75,7 @@ from matplotlib.colors import TwoSlopeNorm
 
 ## Gradients
 
-The gradients in the x- and y-directions are calculated from the normal mapping using the arccosine function and the sine function. This produces a mapping of angles that can be used to calculate the directional gradients.
+By deriving gradients in the x- and y-directions from the normal mapping, a mapping of angles is generated, which can be utilized to compute the directional gradients.
 
 Given the normal vector $\vec{n} \in \mathbb{R}^{3}$ and a rotation value $r \in \mathbb{R}[0,2\pi]$, the anisotropic gradients are calculated:
 
@@ -130,19 +120,19 @@ _ = axes[2].imshow(np.clip(normals, 0, 255))
 
 
     
-![png](README_files/README_10_0.png)
+![png](README_files/README_11_0.png)
     
 
 
 ## Heights
 
-The height values $h(x,y) \in \mathbb{R}^{2}, \ \ x,y \in \mathbb{N}^{0}$ can be calculated by a cumulative sum over the gradients which converges to an integral over $g(x,y)$:
+The height values $h(x,y) \in \mathbb{R}^{2}, \ \ x,y \in \mathbb{N}^{0}$ can be obtained by performing a cumulative sum over the gradients, which eventually approaches an integral over $g(x,y)$:
 
 $$
 h(x_t,y_t) = \iint g(x,y) dydx \ \ (x_t,y_t) \approx \sum_{x_i=0}^{x_t} g(x_i,y_t)
 $$
 
-The isotropic (non-directional) heights are determined with a combination of all anisotropic heights.
+The isotropic (non-directional) heights are determined by a combination of all the anisotropic heights.
 
 
 
@@ -216,25 +206,25 @@ visualize_heights(
 
 
     
-![png](README_files/README_12_0.png)
+![png](README_files/README_13_0.png)
     
 
 
 
     
-![png](README_files/README_12_1.png)
+![png](README_files/README_13_1.png)
     
 
 
 ## Rotation
 
-The use of the cumulative sum (Riemann sum) to calculate the height map is a simple and efficient method, but it is also susceptible to errors, especially when the gradient mapping has sharp changes in direction. To reduce these errors, the estimate_height_map function calculates the height map using multiple rotated versions of the gradient mapping and averages the results. This helps to smooth out the errors and improve the accuracy of the height map estimates.
+While using the cumulative sum (Riemann sum) to calculate the height map is a straightforward and efficient method, it may result in errors, particularly when the gradient mapping contains abrupt changes in direction. In order to mitigate such errors, the estimate_height_map function utilizes multiple rotated versions of the gradient mapping and computes their averages to generate the height map. This approach aids in the reduction of errors and enhances the precision of the height map estimates.
 
 $$
 h(x_t,y_t) = \sum_{r=0}^{2\pi} \sum_{x_i=0}^{x_t} g R_\theta (x_i,y_t)
 $$
 
-If we think of the left, right, top and bottom height maps in polar coordinates, we better call them 180°, 0°, 90° and 270° height maps.
+To refer to the height maps in polar coordinates representing the left, right, top, and bottom, it would be more appropriate to name them as 180°, 0°, 90°, and 270° height maps, respectively.
 
 
 
@@ -245,12 +235,11 @@ _ = plt.yticks([1])
 
 
     
-![png](README_files/README_14_0.png)
+![png](README_files/README_15_0.png)
     
 
 
-If we want to for example calculate a 225° anisotropic height map, we need to rotate the normal map first, but a simple image-rotation will result in wrong normals. Thus, we also need to rotate the normals accordingly.
-
+When computing an anisotropic height map for a 225° direction, it is necessary to first rotate the normal map. However, a standard image rotation technique may lead to incorrect normal vectors, hence it is also essential to perform a corresponding rotation of the normal vectors.
 
 
 ```python
@@ -336,7 +325,7 @@ _ = axes[2].imshow(rotated_normal_map)
 
 
     
-![png](README_files/README_16_0.png)
+![png](README_files/README_17_0.png)
     
 
 
@@ -427,7 +416,7 @@ for index in range(4):
 
 
     
-![png](README_files/README_18_0.png)
+![png](README_files/README_19_0.png)
     
 
 
@@ -435,7 +424,7 @@ for index in range(4):
 
 ## Integration
 
-Cumulative sum is a a very primitive way of calculating an integral. In the following the trapezoid and the Simpson method are implemented additionally.
+The cumulative sum method is a rudimentary approach for computing integrals. In the following, we have implemented the trapezoid and Simpson's method to provide additional options for integral computation.
 
 
 ```python
@@ -494,23 +483,21 @@ visualize_heights(
 
 
     
-![png](README_files/README_20_0.png)
+![png](README_files/README_21_0.png)
     
 
 
 
     
-![png](README_files/README_20_1.png)
+![png](README_files/README_21_1.png)
     
 
 
-They all look quite the same and in fact, they are pretty much equal. However, the Simpson approach takes a very long computational time in this implementation, compared to sum and trapezoid.
-
-This is quite demotivating in regard of using polynomial approximation in general to improve the resulting heights.
+Although they may appear similar and effectively provide equivalent results, the Simpson method demands considerably more computational time in this implementation than the sum and trapezoid methods. This outcome can be disheartening regarding the use of polynomial approximation to enhance the resulting heights in general.
 
 ## Confidence
 
-A simple approach to calculate the confidence of a pixel is to override the heights combination function to return the negative standard deviation instead of the mean.
+A straightforward technique for computing the confidence of a pixel is to modify the heights combination function to return the negative standard deviation rather than the mean.
 
 
 ```python
@@ -527,6 +514,6 @@ _ = plt.colorbar()
 
 
     
-![png](README_files/README_23_0.png)
+![png](README_files/README_24_0.png)
     
 
