@@ -5,28 +5,18 @@
 </a>
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**
-
-- [Introduction](#introduction)
-- [Quickstart](#quickstart)
-- [Imports & Inputs](#imports--inputs)
-- [Explanation](#explanation)
-  - [Gradients](#gradients)
-  - [Heights](#heights)
-  - [Rotation](#rotation)
-- [Discussion](#discussion)
-  - [Integration](#integration)
-  - [Confidence](#confidence)
-
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Introduction
 
 
-This algorithm estimates a 3D integral with the normal mapping with surface integrals of vector fields. First, the directional gradients of the normals in the x- and y-directions are calculated. They are then used to calculate the integrated values by a cumulative sum (Riemann sum). This process is repeated with differently rotated versions of the gradient mapping to average the values and reduce errors, as a cumulative sum alone is very prone to subsequent errors.
+This algorithm utilizes the normal mapping to approximate a 3D integral by means of surface integrals of vector fields. Initially, the directional gradients of the normals are determined along the x- and y-directions. These gradients are then used to compute the integrated values by employing a cumulative sum (Riemann sum). To enhance the accuracy of the estimated values, this process is repeated multiple times with the gradient mapping rotated in different orientations, and the results are averaged.
 
 # Quickstart
+
+Just run the following in your CLI install all necessary packages on your machine, before you continue.
+
+```pip install -r requirements.txt```
 
 
 ```python
@@ -58,21 +48,18 @@ _ = axes.scatter(x, y, heights, c=heights)
 
 
     
-![png](README_files/README_5_0.png)
+![png](README_files/README_6_0.png)
     
 
 
 
     
-![png](README_files/README_5_1.png)
+![png](README_files/README_6_1.png)
     
 
 
-# Imports & Inputs
+# Explanation
 
-Just run the following in your CLI install all necessary packages on your mashine.
-
-```pip install -r requirements.txt```
 
 
 ```python
@@ -83,9 +70,6 @@ from math import sin, cos, radians, pi
 from typing import List, Tuple
 from matplotlib.colors import TwoSlopeNorm
 ```
-
-# Explanation
-
 
 ## Gradients
 
@@ -134,7 +118,7 @@ _ = axes[2].imshow(np.clip(normals, 0, 255))
 
 
     
-![png](README_files/README_11_0.png)
+![png](README_files/README_10_0.png)
     
 
 
@@ -220,13 +204,13 @@ visualize_heights(
 
 
     
-![png](README_files/README_13_0.png)
+![png](README_files/README_12_0.png)
     
 
 
 
     
-![png](README_files/README_13_1.png)
+![png](README_files/README_12_1.png)
     
 
 
@@ -249,7 +233,7 @@ _ = plt.yticks([1])
 
 
     
-![png](README_files/README_15_0.png)
+![png](README_files/README_14_0.png)
     
 
 
@@ -339,7 +323,7 @@ _ = axes[2].imshow(rotated_normal_map)
 
 
     
-![png](README_files/README_17_0.png)
+![png](README_files/README_16_0.png)
     
 
 
@@ -430,7 +414,7 @@ for index in range(4):
 
 
     
-![png](README_files/README_19_0.png)
+![png](README_files/README_18_0.png)
     
 
 
@@ -497,13 +481,13 @@ visualize_heights(
 
 
     
-![png](README_files/README_21_0.png)
+![png](README_files/README_20_0.png)
     
 
 
 
     
-![png](README_files/README_21_1.png)
+![png](README_files/README_20_1.png)
     
 
 
@@ -528,6 +512,6 @@ _ = plt.colorbar()
 
 
     
-![png](README_files/README_24_0.png)
+![png](README_files/README_23_0.png)
     
 
