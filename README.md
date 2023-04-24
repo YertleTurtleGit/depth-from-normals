@@ -1,23 +1,10 @@
 [![Map Pipeline](https://github.com/YertleTurtleGit/depth-from-normals/actions/workflows/map_pipeline.yml/badge.svg)](https://github.com/YertleTurtleGit/depth-from-normals/actions/workflows/map_pipeline.yml)
 [![Lint](https://github.com/YertleTurtleGit/depth-from-normals/actions/workflows/lint.yml/badge.svg)](https://github.com/YertleTurtleGit/depth-from-normals/actions/workflows/lint.yml)
-<a target="_blank" href="https://colab.research.google.com/github/YertleTurtleGit/depth-from-normals">
+<a target="_blank" href="https://colab.research.google.com/github/YertleTurtleGit/depth-from-normals/blob/main/README.ipynb">
 <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**
-
-- [Introduction](#introduction)
-- [Quickstart](#quickstart)
-- [Explanation](#explanation)
-  - [Gradients](#gradients)
-  - [Heights](#heights)
-  - [Rotation](#rotation)
-- [Discussion](#discussion)
-  - [Integration](#integration)
-  - [Confidence](#confidence)
-
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Introduction
@@ -40,7 +27,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 from skimage import io
 
-NORMAL_MAP_A_PATH: str = "https://raw.githubusercontent.com/YertleTurtleGit/depth-from-normals/main/normal_mapping_a.png"  # @param {type: "string"}
+NORMAL_MAP_A_PATH: str = "https://raw.githubusercontent.com/YertleTurtleGit/depth-from-normals/main/normal_mapping_a.png"
 NORMAL_MAP_B_PATH: str = "https://raw.githubusercontent.com/YertleTurtleGit/depth-from-normals/main/normal_mapping_b.png"
 NORMAL_MAP_A_IMAGE: np.ndarray = io.imread(NORMAL_MAP_A_PATH)
 NORMAL_MAP_B_IMAGE: np.ndarray = io.imread(NORMAL_MAP_B_PATH)
@@ -79,6 +66,7 @@ _ = axes.scatter(x, y, heights, c=heights)
 import cv2 as cv
 from scipy.integrate import cumulative_trapezoid, simpson
 from multiprocessing.pool import ThreadPool as Pool
+from multiprocessing import cpu_count
 from math import sin, cos, radians, pi
 from typing import List, Tuple
 from matplotlib.colors import TwoSlopeNorm
@@ -258,50 +246,19 @@ ANGLE = 225
 
 
 def rotate(matrix: np.ndarray, angle: float) -> np.ndarray:
-    image_size = (matrix.shape[1], matrix.shape[0])
-    image_center = tuple(np.array(image_size) / 2)
+    h, w = matrix.shape[:2]
+    center = (w / 2, h / 2)
 
-    rotation_matrix = np.matrix(
-        np.vstack([cv.getRotationMatrix2D(image_center, angle, 1.0), [0, 0, 1]])
-    )
-    translation_matrix = np.matrix(np.identity(3))
+    rotation_matrix = cv.getRotationMatrix2D(center, angle, 1.0)
+    corners = cv.transform(
+        np.array([[[0, 0], [w, 0], [w, h], [0, h]]]), rotation_matrix
+    )[0]
 
-    w2 = image_size[0] * 0.5
-    h2 = image_size[1] * 0.5
+    _, _, w, h = cv.boundingRect(corners)
 
-    rot_mat_notranslate = np.matrix(rotation_matrix[0:2, 0:2])
-
-    tl = (np.array([-w2, h2]) * rot_mat_notranslate).A[0]
-    tr = (np.array([w2, h2]) * rot_mat_notranslate).A[0]
-    bl = (np.array([-w2, -h2]) * rot_mat_notranslate).A[0]
-    br = (np.array([w2, -h2]) * rot_mat_notranslate).A[0]
-
-    x_coords = [pt[0] for pt in [tl, tr, bl, br]]
-    x_pos = [x for x in x_coords if x > 0]
-    x_neg = [x for x in x_coords if x < 0]
-
-    y_coords = [pt[1] for pt in [tl, tr, bl, br]]
-    y_pos = [y for y in y_coords if y > 0]
-    y_neg = [y for y in y_coords if y < 0]
-
-    right_bound = max(x_pos)
-    left_bound = min(x_neg)
-    top_bound = max(y_pos)
-    bot_bound = min(y_neg)
-
-    new_w = int(abs(right_bound - left_bound))
-    new_h = int(abs(top_bound - bot_bound))
-    new_image_size = (new_w, new_h)
-
-    new_midx = new_w * 0.5
-    new_midy = new_h * 0.5
-
-    dx = int(new_midx - w2)
-    dy = int(new_midy - h2)
-
-    translation_matrix = np.matrix(np.array([[1, 0, dx], [0, 1, dy], [0, 0, 1]]))
-    affine_mat = (np.matrix(translation_matrix) * rotation_matrix)[0:2, :]
-    result = cv.warpAffine(matrix, affine_mat, new_image_size, flags=cv.INTER_LINEAR)
+    rotation_matrix[0, 2] += w / 2 - center[0]
+    rotation_matrix[1, 2] += h / 2 - center[1]
+    result = cv.warpAffine(matrix, rotation_matrix, (w, h), flags=cv.INTER_LINEAR)
 
     return result
 
@@ -313,12 +270,19 @@ wrong_normals = (
 ) * 2
 
 
-def rotate_vector_field_normals(normals, angle):
-    rotated_normals = normals.copy()
-    rotated_normals[:, :, 0] = normals[:, :, 0] * cos(radians(angle))
-    rotated_normals[:, :, 0] -= normals[:, :, 1] * sin(radians(angle))
-    rotated_normals[:, :, 1] = normals[:, :, 0] * sin(radians(angle))
-    rotated_normals[:, :, 1] += normals[:, :, 1] * cos(radians(angle))
+def rotate_vector_field_normals(normals: np.ndarray, angle: float) -> np.ndarray:
+    angle = np.radians(angle)
+    cos_angle = np.cos(angle)
+    sin_angle = np.sin(angle)
+
+    rotated_normals = np.empty_like(normals)
+    rotated_normals[:, :, 0] = (
+        normals[:, :, 0] * cos_angle - normals[:, :, 1] * sin_angle
+    )
+    rotated_normals[:, :, 1] = (
+        normals[:, :, 0] * sin_angle + normals[:, :, 1] * cos_angle
+    )
+
     return rotated_normals
 
 
@@ -358,11 +322,12 @@ def centered_crop(image: np.ndarray, target_resolution: Tuple[int, int]) -> np.n
 
 ```python
 def integrate_vector_field(
-    vector_field: np.ndarray, target_iteration_count: int
+    vector_field: np.ndarray,
+    target_iteration_count: int,
+    thread_count: int = cpu_count(),
 ) -> np.ndarray:
     shape = vector_field.shape[:2]
     angles = np.linspace(0, 90, target_iteration_count, endpoint=False)
-    thread_count = 4
 
     def integrate_vector_field_angles(angles: List[float]) -> np.ndarray:
         all_combined_heights = np.zeros(shape)
