@@ -116,7 +116,6 @@ def integrate_vector_field(
     target_iteration_count: int,
     thread_count: int,
 ) -> np.ndarray:
-
     shape = vector_field.shape[:2]
     angles = np.linspace(0, 90, target_iteration_count, endpoint=False)
 
