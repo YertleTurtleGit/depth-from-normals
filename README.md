@@ -5,19 +5,6 @@
 </a>
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**
-
-- [Introduction](#introduction)
-- [Quickstart](#quickstart)
-- [Explanation](#explanation)
-  - [Gradients](#gradients)
-  - [Heights](#heights)
-  - [Rotation](#rotation)
-- [Discussion](#discussion)
-  - [Integration](#integration)
-  - [Confidence](#confidence)
-
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Introduction
@@ -80,7 +67,6 @@ import cv2 as cv
 from scipy.integrate import cumulative_trapezoid, simpson
 from multiprocessing.pool import ThreadPool as Pool
 from multiprocessing import cpu_count
-from math import sin, cos, radians, pi
 from typing import List, Tuple
 from matplotlib.colors import TwoSlopeNorm
 ```
@@ -105,12 +91,12 @@ $$
 def calculate_gradients(normals: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     horizontal_angle_map = np.arccos(np.clip(normals[:, :, 0], -1, 1))
     left_gradients = (1 - np.sin(horizontal_angle_map)) * np.sign(
-        horizontal_angle_map - pi / 2
+        horizontal_angle_map - np.pi / 2
     )
 
     vertical_angle_map = np.arccos(np.clip(normals[:, :, 1], -1, 1))
     top_gradients = -(1 - np.sin(vertical_angle_map)) * np.sign(
-        vertical_angle_map - pi / 2
+        vertical_angle_map - np.pi / 2
     )
 
     return left_gradients, top_gradients
