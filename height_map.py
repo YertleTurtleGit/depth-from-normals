@@ -2,7 +2,6 @@ import numpy as np
 import cv2 as cv
 from multiprocessing.pool import ThreadPool as Pool
 from multiprocessing import cpu_count
-from math import pi, cos, sin, radians
 from typing import Tuple, List, Union
 import numba
 
@@ -13,13 +12,13 @@ def calculate_gradients(
     horizontal_angle_map = np.arccos(np.clip(normals[:, :, 0], -1, 1))
     left_gradients = np.zeros(normals.shape[:2])
     left_gradients[mask != 0] = (1 - np.sin(horizontal_angle_map[mask != 0])) * np.sign(
-        horizontal_angle_map[mask != 0] - pi / 2
+        horizontal_angle_map[mask != 0] - np.pi / 2
     )
 
     vertical_angle_map = np.arccos(np.clip(normals[:, :, 1], -1, 1))
     top_gradients = np.zeros(normals.shape[:2])
     top_gradients[mask != 0] = -(1 - np.sin(vertical_angle_map[mask != 0])) * np.sign(
-        vertical_angle_map[mask != 0] - pi / 2
+        vertical_angle_map[mask != 0] - np.pi / 2
     )
 
     return left_gradients, top_gradients
