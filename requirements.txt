@@ -1,3 +1,4 @@
+pathlib2 >= 2.3.7.post1
 numpy >= 1.22.2
 opencv_contrib_python >= 4.5.5.62
 scikit_image >= 0.19.2
