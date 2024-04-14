@@ -5,19 +5,6 @@
 </a>
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**
-
-- [Introduction](#introduction)
-- [Quickstart](#quickstart)
-- [Explanation](#explanation)
-  - [Gradients](#gradients)
-  - [Heights](#heights)
-  - [Rotation](#rotation)
-- [Discussion](#discussion)
-  - [Integration](#integration)
-  - [Confidence](#confidence)
-
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Introduction
@@ -29,6 +16,7 @@ This algorithm utilizes the normal mapping to approximate a 3D integral by means
 
 
 ```python
+%pip install pathlib2
 import pathlib2 as pathlib
 
 if not (pathlib.Path('.git').is_dir() and pathlib.Path.cwd().name == "depth-from-normals"):
@@ -36,6 +24,24 @@ if not (pathlib.Path('.git').is_dir() and pathlib.Path.cwd().name == "depth-from
     %cd depth-from-normals/
     %pip install -q -r requirements.txt
 ```
+
+    Defaulting to user installation because normal site-packages is not writeable
+
+
+    Collecting pathlib2
+
+
+      Downloading pathlib2-2.3.7.post1-py2.py3-none-any.whl.metadata (3.5 kB)
+    Requirement already satisfied: six in /usr/lib/python3/dist-packages (from pathlib2) (1.16.0)
+    Downloading pathlib2-2.3.7.post1-py2.py3-none-any.whl (18 kB)
+
+
+    Installing collected packages: pathlib2
+    Successfully installed pathlib2-2.3.7.post1
+
+
+    Note: you may need to restart the kernel to use updated packages.
+
 
 
 ```python
