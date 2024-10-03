@@ -84,14 +84,12 @@ def rotate_vector_field_normals(normals: np.ndarray, angle: float) -> np.ndarray
 
 def centered_crop(image: np.ndarray, target_resolution: Tuple[int, int]) -> np.ndarray:
     return image[
-        (image.shape[0] - target_resolution[0]) // 2 : (
-            image.shape[0] - target_resolution[0]
-        )
+        (image.shape[0] - target_resolution[0])
+        // 2 : (image.shape[0] - target_resolution[0])
         // 2
         + target_resolution[0],
-        (image.shape[1] - target_resolution[1]) // 2 : (
-            image.shape[1] - target_resolution[1]
-        )
+        (image.shape[1] - target_resolution[1])
+        // 2 : (image.shape[1] - target_resolution[1])
         // 2
         + target_resolution[1],
     ]
