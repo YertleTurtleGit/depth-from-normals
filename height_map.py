@@ -6,55 +6,43 @@ from typing import Tuple, List, Union
 import numba
 
 
-def calculate_gradients(
-    normals: np.ndarray, mask: np.ndarray
-) -> Tuple[np.ndarray, np.ndarray]:
-    horizontal_angle_map = np.arccos(np.clip(normals[:, :, 0], -1, 1))
-    left_gradients = np.zeros(normals.shape[:2])
-    left_gradients[mask != 0] = (1 - np.sin(horizontal_angle_map[mask != 0])) * np.sign(
-        horizontal_angle_map[mask != 0] - np.pi / 2
+def calculate_gradients(normals: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    normals = normals.astype(np.float64)
+
+    horizontal_angle_map = np.arccos(np.clip(normals[..., 0], -1, 1))
+    left_gradients = np.sign(horizontal_angle_map - np.pi / 2) * (
+        1 - np.sin(horizontal_angle_map)
     )
 
-    vertical_angle_map = np.arccos(np.clip(normals[:, :, 1], -1, 1))
-    top_gradients = np.zeros(normals.shape[:2])
-    top_gradients[mask != 0] = -(1 - np.sin(vertical_angle_map[mask != 0])) * np.sign(
-        vertical_angle_map[mask != 0] - np.pi / 2
+    vertical_angle_map = np.arccos(np.clip(normals[..., 1], -1, 1))
+    top_gradients = -np.sign(vertical_angle_map - np.pi / 2) * (
+        1 - np.sin(vertical_angle_map)
     )
 
     return left_gradients, top_gradients
 
 
 @numba.jit(nopython=True)
-def integrate_gradient_field(
-    gradient_field: np.ndarray, axis: int, mask: np.ndarray
-) -> np.ndarray:
+def integrate_gradient_field(gradient_field: np.ndarray, axis: int) -> np.ndarray:
     heights = np.zeros(gradient_field.shape)
 
     for d1 in numba.prange(heights.shape[1 - axis]):
         sum_value = 0
         for d2 in range(heights.shape[axis]):
             coordinates = (d1, d2) if axis == 1 else (d2, d1)
-
-            if mask[coordinates] != 0:
-                sum_value = sum_value + gradient_field[coordinates]
-                heights[coordinates] = sum_value
-            else:
-                sum_value = 0
+            sum_value = sum_value + gradient_field[coordinates]
+            heights[coordinates] = sum_value
 
     return heights
 
 
 def calculate_heights(
-    left_gradients: np.ndarray, top_gradients, mask: np.ndarray
+    left_gradients: np.ndarray, top_gradients
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    left_heights = integrate_gradient_field(left_gradients, 1, mask)
-    right_heights = np.fliplr(
-        integrate_gradient_field(np.fliplr(-left_gradients), 1, np.fliplr(mask))
-    )
-    top_heights = integrate_gradient_field(top_gradients, 0, mask)
-    bottom_heights = np.flipud(
-        integrate_gradient_field(np.flipud(-top_gradients), 0, np.flipud(mask))
-    )
+    left_heights = integrate_gradient_field(left_gradients, 1)
+    right_heights = np.fliplr(integrate_gradient_field(np.fliplr(-left_gradients), 1))
+    top_heights = integrate_gradient_field(top_gradients, 0)
+    bottom_heights = np.flipud(integrate_gradient_field(np.flipud(-top_gradients), 0))
     return left_heights, right_heights, top_heights, bottom_heights
 
 
@@ -82,14 +70,16 @@ def rotate(matrix: np.ndarray, angle: float) -> np.ndarray:
 
 def rotate_vector_field_normals(normals: np.ndarray, angle: float) -> np.ndarray:
     angle = np.radians(angle)
-    cos_angle = np.cos(angle)
-    sin_angle = np.sin(angle)
+    cos_angle, sin_angle = np.cos(angle), np.sin(angle)
 
-    rotated_normals = np.empty_like(normals)
-    rotated_normals[..., 0] = normals[..., 0] * cos_angle - normals[..., 1] * sin_angle
-    rotated_normals[..., 1] = normals[..., 0] * sin_angle + normals[..., 1] * cos_angle
-
-    return rotated_normals
+    return np.stack(
+        [
+            normals[..., 0] * cos_angle - normals[..., 1] * sin_angle,
+            normals[..., 0] * sin_angle + normals[..., 1] * cos_angle,
+            normals[..., 2],
+        ],
+        axis=-1,
+    )
 
 
 def centered_crop(image: np.ndarray, target_resolution: Tuple[int, int]) -> np.ndarray:
@@ -109,7 +99,6 @@ def centered_crop(image: np.ndarray, target_resolution: Tuple[int, int]) -> np.n
 
 def integrate_vector_field(
     vector_field: np.ndarray,
-    mask: np.ndarray,
     target_iteration_count: int,
     thread_count: int,
 ) -> np.ndarray:
@@ -123,17 +112,14 @@ def integrate_vector_field(
             rotated_vector_field = rotate_vector_field_normals(
                 rotate(vector_field, angle), angle
             )
-            rotated_mask = rotate(mask, angle)
 
-            left_gradients, top_gradients = calculate_gradients(
-                rotated_vector_field, rotated_mask
-            )
+            left_gradients, top_gradients = calculate_gradients(rotated_vector_field)
             (
                 left_heights,
                 right_heights,
                 top_heights,
                 bottom_heights,
-            ) = calculate_heights(left_gradients, top_gradients, rotated_mask)
+            ) = calculate_heights(left_gradients, top_gradients)
 
             combined_heights = combine_heights(
                 left_heights, right_heights, top_heights, bottom_heights
@@ -169,21 +155,21 @@ def estimate_height_map(
     thread_count: int = cpu_count(),
     raw_values: bool = False,
 ) -> np.ndarray:
-    if mask is None:
-        mask = np.ones(normal_map.shape[:2], dtype=np.uint8)
+    if mask is None and normal_map.shape[2] == 3:
+        normal_map = np.pad(normal_map, ((0, 0), (0, 0), (0, 1)), constant_values=255)
 
-    normals = ((normal_map[:, :, :3].astype(np.float64) / 255) - 0.5) * 2
-    heights = integrate_vector_field(
-        normals, mask, target_iteration_count, thread_count
-    )
+    if mask is not None:
+        normal_map = np.stack(
+            [normal_map[..., 0], normal_map[..., 1], normal_map[..., 2], mask], axis=-1
+        )
+
+    normals = ((normal_map.astype(np.float64) / 255) - 0.5) * 2
+    heights = integrate_vector_field(normals, target_iteration_count, thread_count)
 
     if raw_values:
         return heights
 
     heights /= height_divisor
-    heights[mask > 0] += 1 / 2
-    heights[mask == 0] = 1 / 2
-
     heights *= 2**16 - 1
 
     if np.min(heights) < 0 or np.max(heights) > 2**16 - 1:
