@@ -152,7 +152,7 @@ def estimate_height_map(
     mask: Union[np.ndarray, None] = None,
     height_divisor: float = 1,
     target_iteration_count: int = 250,
-    thread_count: int = cpu_count(),
+    thread_count: int = max(cpu_count(), 1),
     raw_values: bool = False,
 ) -> np.ndarray:
     if mask is None and normal_map.shape[2] == 3:
