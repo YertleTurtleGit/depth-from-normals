@@ -5,19 +5,6 @@
 </a>
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**
-
-- [Introduction](#introduction)
-- [Quickstart](#quickstart)
-- [Explanation](#explanation)
-  - [Gradients](#gradients)
-  - [Heights](#heights)
-  - [Rotation](#rotation)
-- [Discussion](#discussion)
-  - [Integration](#integration)
-  - [Confidence](#confidence)
-
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Introduction
@@ -29,14 +16,20 @@ This algorithm utilizes the normal mapping to approximate a 3D integral by means
 
 
 ```python
-%pip install -q pathlib2
+%pip install -qq pathlib2
 import pathlib2 as pathlib
 
-if not (pathlib.Path('.git').is_dir() and pathlib.Path.cwd().name == "depth-from-normals"):
+if not (
+    pathlib.Path(".git").is_dir() and pathlib.Path.cwd().name == "depth-from-normals"
+):
     !git clone -q https://github.com/YertleTurtleGit/depth-from-normals.git
     %cd depth-from-normals/
-    %pip install -q -r requirements.txt
+
+%pip install -qq -r requirements.txt
 ```
+
+    Note: you may need to restart the kernel to use updated packages.
+
 
     Note: you may need to restart the kernel to use updated packages.
 
@@ -45,7 +38,7 @@ if not (pathlib.Path('.git').is_dir() and pathlib.Path.cwd().name == "depth-from
 ```python
 from height_map import (
     estimate_height_map,
-)  # local file 'height_map.py' in this repository
+)  # Local file 'height_map.py' in this repository.
 from matplotlib import pyplot as plt
 import numpy as np
 from skimage import io
@@ -116,14 +109,16 @@ $$
 
 ```python
 def calculate_gradients(normals: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-    horizontal_angle_map = np.arccos(np.clip(normals[:, :, 0], -1, 1))
-    left_gradients = (1 - np.sin(horizontal_angle_map)) * np.sign(
-        horizontal_angle_map - np.pi / 2
+    normals = normals.astype(np.float64)
+
+    horizontal_angle_map = np.arccos(np.clip(normals[..., 0], -1, 1))
+    left_gradients = np.sign(horizontal_angle_map - np.pi / 2) * (
+        1 - np.sin(horizontal_angle_map)
     )
 
-    vertical_angle_map = np.arccos(np.clip(normals[:, :, 1], -1, 1))
-    top_gradients = -(1 - np.sin(vertical_angle_map)) * np.sign(
-        vertical_angle_map - np.pi / 2
+    vertical_angle_map = np.arccos(np.clip(normals[..., 1], -1, 1))
+    top_gradients = -np.sign(vertical_angle_map - np.pi / 2) * (
+        1 - np.sin(vertical_angle_map)
     )
 
     return left_gradients, top_gradients
@@ -170,13 +165,10 @@ def calculate_heights(
     left_gradients: np.ndarray, top_gradients: np.ndarray
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     left_heights = integrate_gradient_field(left_gradients, axis=1)
-    right_heights = np.fliplr(
-        integrate_gradient_field(np.fliplr(-left_gradients), axis=1)
-    )
+    right_heights = integrate_gradient_field(-left_gradients[:, ::-1], axis=1)[:, ::-1]
     top_heights = integrate_gradient_field(top_gradients, axis=0)
-    bottom_heights = np.flipud(
-        integrate_gradient_field(np.flipud(-top_gradients), axis=0)
-    )
+    bottom_heights = integrate_gradient_field(-top_gradients[::-1], axis=0)[::-1]
+
     return left_heights, right_heights, top_heights, bottom_heights
 
 
@@ -255,7 +247,7 @@ To refer to the height maps in polar coordinates representing the left, right, t
 
 ```python
 plt.polar()
-_ = plt.yticks([1])
+_ = plt.yticks([])
 ```
 
 
@@ -268,7 +260,7 @@ When computing an anisotropic height map for a 225° direction, it is necessary 
 
 
 ```python
-ANGLE = 225
+ANGLE = 200
 
 
 def rotate(matrix: np.ndarray, angle: float) -> np.ndarray:
@@ -291,25 +283,23 @@ def rotate(matrix: np.ndarray, angle: float) -> np.ndarray:
 
 rotated_normal_map_wrong = rotate(NORMAL_MAP_A_IMAGE, ANGLE)
 
-wrong_normals = (
-    (rotated_normal_map_wrong[:, :, :3].astype(np.float64) / 255) - 0.5
-) * 2
+
+wrong_normals = ((rotated_normal_map_wrong.astype(np.float64) / 255) - 0.5) * 2
 
 
 def rotate_vector_field_normals(normals: np.ndarray, angle: float) -> np.ndarray:
     angle = np.radians(angle)
-    cos_angle = np.cos(angle)
-    sin_angle = np.sin(angle)
+    cos_angle, sin_angle = np.cos(angle), np.sin(angle)
 
-    rotated_normals = np.empty_like(normals)
-    rotated_normals[:, :, 0] = (
-        normals[:, :, 0] * cos_angle - normals[:, :, 1] * sin_angle
+    return np.stack(
+        [
+            normals[..., 0] * cos_angle - normals[..., 1] * sin_angle,
+            normals[..., 0] * sin_angle + normals[..., 1] * cos_angle,
+            normals[..., 2],
+            normals[..., 3],
+        ],
+        axis=-1,
     )
-    rotated_normals[:, :, 1] = (
-        normals[:, :, 0] * sin_angle + normals[:, :, 1] * cos_angle
-    )
-
-    return rotated_normals
 
 
 rotated_normals = rotate_vector_field_normals(wrong_normals, ANGLE)
@@ -350,7 +340,7 @@ def centered_crop(image: np.ndarray, target_resolution: Tuple[int, int]) -> np.n
 def integrate_vector_field(
     vector_field: np.ndarray,
     target_iteration_count: int,
-    thread_count: int = cpu_count(),
+    thread_count: int = max(cpu_count(), 1),
 ) -> np.ndarray:
     shape = vector_field.shape[:2]
     angles = np.linspace(0, 90, target_iteration_count, endpoint=False)
@@ -362,6 +352,9 @@ def integrate_vector_field(
             rotated_vector_field = rotate_vector_field_normals(
                 rotate(vector_field, angle), angle
             )
+            rotated_vector_field[..., 0][rotated_vector_field[..., 3] == 0] = 0
+            rotated_vector_field[..., 1][rotated_vector_field[..., 3] == 0] = 0
+            rotated_vector_field[..., 2][rotated_vector_field[..., 3] == 0] = 0
 
             left_gradients, top_gradients = calculate_gradients(rotated_vector_field)
             (
@@ -400,9 +393,15 @@ def integrate_vector_field(
 def estimate_height_map(
     normal_map: np.ndarray, target_iteration_count: int = 250
 ) -> np.ndarray:
-    normals = ((normal_map[:, :, :3] / 255) - 0.5) * 2
+    if normal_map.shape[2] == 3:
+        normal_map = np.pad(normal_map, ((0, 0), (0, 0), (0, 1)), constant_values=255)
+
+    normals = ((normal_map.astype(np.float64) / 255) - 0.5) * 2
     heights = integrate_vector_field(normals, target_iteration_count)
     return heights
+
+
+heights = estimate_height_map(NORMAL_MAP_B_IMAGE, 15)
 
 
 figure, axes = plt.subplots(1, 4, figsize=(14, 6))
